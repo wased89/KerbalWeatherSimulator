@@ -86,6 +86,7 @@ namespace Weather
             {
                 for (int AltLayer = 0; AltLayer < LiveMap.Count; AltLayer++ )
                 {
+                    Debug.Log("Currently Updating Cell: "+ currentIndex);
                     Cell cell = new Cell((uint)currentIndex);
                     WeatherCell temp = LiveMap[AltLayer][cell];
 
@@ -114,7 +115,7 @@ namespace Weather
         public WeatherCell UpdateWeatherCell(Cell cell, WeatherCell wcell)
         {
             
-            wcell.Pressure = 1.0;
+            wcell.Pressure += 0.001;
             wcell.Temperature = (float)Math.Max(Vector3.Dot(cell.Position, sunDir), 0);
 
             return wcell;
