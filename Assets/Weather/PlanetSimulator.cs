@@ -90,7 +90,6 @@ namespace Weather
                     WeatherCell temp = LiveMap[AltLayer][cell];
 
                     BufferMap[AltLayer][cell] = UpdateWeatherCell(cell, temp);
-
                 }
                 
                 currentIndex++;

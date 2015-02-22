@@ -221,3 +221,8 @@ obj/Debug/KerbalWeatherSims.dll
 obj/Debug/KerbalWeatherSims.dll
 *.pdb
 Temp/bin/Debug/KerbalWeatherSims.dll
+*.cache
+*.pdb
+*.user
+*.pdb
+*.user
