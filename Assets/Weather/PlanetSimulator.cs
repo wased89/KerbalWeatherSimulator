@@ -17,6 +17,8 @@ namespace Weather
         
         public Func<Vector3> sunCallback;
         public event Action bufferFlip;
+        public float geeASL = 9.81f; //default for earth
+        public float MMOA = 0.028964f; //default for earth
         private int CellsToUpdate = 500;
         private int currentIndex;
 
@@ -59,6 +61,7 @@ namespace Weather
 
                 }
                 LiveMap.Add(buffer);
+                BufferMap.Add(buffer);
                 //Debug.Log("Finished adding layer: " + AltLayer);
             }
             
@@ -67,6 +70,16 @@ namespace Weather
         public void SetCellsToUpdate(int numb)
         {
             this.CellsToUpdate = numb;
+        }
+        public void SetMolarMassOfAir(float numb)
+        {
+            this.MMOA = numb;
+        }
+
+        public void SetInitTempOfCell(float temperature, int AltLayer, Cell cell)
+        {
+            WeatherCell wcell = LiveMap[AltLayer][cell];
+            wcell.Temperature = temperature;
         }
 
         public void Update()
@@ -86,11 +99,11 @@ namespace Weather
             {
                 for (int AltLayer = 0; AltLayer < LiveMap.Count; AltLayer++ )
                 {
-                    Debug.Log("Currently Updating Cell: "+ currentIndex);
+                    //Debug.Log("Currently Updating Cell: "+ currentIndex);
                     Cell cell = new Cell((uint)currentIndex);
                     WeatherCell temp = LiveMap[AltLayer][cell];
 
-                    BufferMap[AltLayer][cell] = UpdateWeatherCell(cell, temp);
+                    BufferMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell, temp);
                 }
                 
                 currentIndex++;
@@ -112,11 +125,16 @@ namespace Weather
 
         }
 
-        public WeatherCell UpdateWeatherCell(Cell cell, WeatherCell wcell)
+        public WeatherCell UpdateWeatherCell(int AltLayer, Cell cell, WeatherCell wcell)
         {
-            
-            wcell.Pressure += 0.001;
+            float TLR = -6.5f;//-(LiveMap[AltLayer + 1][cell].Temperature - LiveMap[AltLayer][cell].Temperature);
+
             wcell.Temperature = (float)Math.Max(Vector3.Dot(cell.Position, sunDir), 0);
+            wcell.Pressure = WeatherFunctions.calculatePressure(wcell.Pressure, TLR, wcell.Temperature, wcell.Altitude, 
+                (LiveMap[AltLayer + 1][cell].Altitude - wcell.Altitude), geeASL, MMOA);
+
+            wcell.Density = WeatherFunctions.calculateDensity(wcell.Density, TLR, wcell.Temperature, wcell.Altitude,
+                (LiveMap[AltLayer +1][cell].Altitude - wcell.Altitude), geeASL, MMOA);
 
             return wcell;
         }

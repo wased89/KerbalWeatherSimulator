@@ -10,21 +10,21 @@ namespace Weather
     public class WeatherFunctions
     {
 
-        public float getTemperature(Cell cell)
+        public static float getTemperature(PlanetSimulator pSim, int AltLayer, Cell cell)
         {
-            throw new NotImplementedException();
+            return pSim.LiveMap[AltLayer][cell].Temperature;
         }
-        public float getLatitude(Cell cell)
+        public static float getLatitude(Cell cell)
         {
             return (float)(Math.Acos(cell.Position.y/ Math.Sqrt(cell.Position.x * cell.Position.x + cell.Position.z * cell.Position.z)) * 180 / Math.PI);
         }
-        public float getLongitude(Cell cell)
+        public static float getLongitude(Cell cell)
         {
             return (float)(Math.Atan2(cell.Position.z, cell.Position.x) * 180 / Math.PI);
         }
-        public float getAltitude(Cell cell)
+        public static float getAltitude(PlanetSimulator pSim, int AltLayer, Cell cell)
         {
-            throw new NotImplementedException();
+            return pSim.LiveMap[AltLayer][cell].Altitude;
         }
 
         public Vector3 getDirection(float latitude, float longitude)
@@ -42,26 +42,34 @@ namespace Weather
             return true;
         }
 
-        public static float calculatePressure(PlanetSimulator pSim, Cell cell)
+        public static float calculatePressure(float basePressure, float TLR, float temperature, float AOC, float HOL, float geeASL, float MMOA)
         {
-            float pressure = 0f;
+            //Things we need: base pressure of level, Temp Lapse Rate, Temperature, Altitude of cell,
+            //height of layer, Gravity at sea level, Molar mass of air, universal gas constant for air = 8.31432
+
+            //Possible causes of error: temperature is 0 and TLR is 0, resulting in NaN
+            //However temperature is in Kelvins, so that shouldn't ever happen
+
+            float pressure = basePressure * Mathf.Pow((temperature / (temperature + TLR) * (AOC + HOL)),((geeASL * MMOA) / (8.31432f * TLR)));
             
             return pressure;
         }
 
-        public static float calculateDensity(PlanetSimulator pSim, Cell cell)
+        public static float calculateDensity(float baseDensity, float TLR, float temperature, float AOC, float HOL, float geeASL, float MMOA)
         {
-            float density = 0;
+            //Things we need: base density of level, temp, TLR, altitude, height of cell, geeASL, Molar mass of air
+            //universal gas constant for air
+            float density = baseDensity * Mathf.Pow((((temperature + TLR) * ((AOC + HOL)-AOC)) / temperature),((-(geeASL * MMOA) / (8.31432f * TLR)) -1f));
             return density;
         }
 
-        public float getHumidity(Cell cell)
+        public static float getHumidity(Cell cell)
         {
             throw new NotImplementedException();
         }
-        public float getWindSpeed(Cell cell)
+        public float getWindSpeed(PlanetSimulator pSim, int AltLayer, Cell cell)
         {
-            throw new NotImplementedException();
+            return pSim.LiveMap[AltLayer][cell].WindDirection.magnitude;
         }
 
 

@@ -31,8 +31,8 @@ namespace Weather
         //Weather Stats
         
 
-        public double Pressure;
-        public double Density;
+        
+        
 
         //Radiation
         public float SWReflected;
@@ -50,6 +50,8 @@ namespace Weather
         public float Humidity;
         public float Temperature;
         public float Altitude;
+        public float Pressure;
+        public float Density;
         //public float WindSpeed;
 
         public Vector3 WindDirection;
