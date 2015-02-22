@@ -214,3 +214,10 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+Temp/bin/Debug/KerbalWeatherSims.pdb
+*.suo
+obj/Debug/KerbalWeatherSims.dll
+*.suo
+obj/Debug/KerbalWeatherSims.dll
+*.pdb
+Temp/bin/Debug/KerbalWeatherSims.dll
