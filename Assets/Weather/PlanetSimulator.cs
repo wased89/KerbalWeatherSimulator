@@ -16,6 +16,7 @@ namespace Weather
         private Vector3 sunDir;
         
         public Func<Vector3> sunCallback;
+        public Func<int,Cell, float> tempCallback;
         public event Action bufferFlip;
         public float geeASL = 9.81f; //default for earth
         public float MMOA = 0.028964f; //default for earth
@@ -67,6 +68,11 @@ namespace Weather
             
         }
 
+        public void SetTemperatureFunction(Func<int, Cell, float> func)
+        {
+            this.tempCallback = func;
+        }
+
         public void SetCellsToUpdate(int numb)
         {
             this.CellsToUpdate = numb;
@@ -80,6 +86,16 @@ namespace Weather
         {
             WeatherCell wcell = LiveMap[AltLayer][cell];
             wcell.Temperature = temperature;
+        }
+        public void SetInitPressureOfCell(float pressure, int AltLayer, Cell cell)
+        {
+            WeatherCell wcell = LiveMap[AltLayer][cell];
+            wcell.Pressure = pressure;
+        }
+        public void SetInitDensityOfCell(float density, int AltLayer, Cell cell)
+        {
+            WeatherCell wcell = LiveMap[AltLayer][cell];
+            wcell.Density = density;
         }
 
         public void Update()
@@ -102,7 +118,6 @@ namespace Weather
                     //Debug.Log("Currently Updating Cell: "+ currentIndex);
                     Cell cell = new Cell((uint)currentIndex);
                     WeatherCell temp = LiveMap[AltLayer][cell];
-
                     BufferMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell, temp);
                 }
                 
@@ -127,14 +142,37 @@ namespace Weather
 
         public WeatherCell UpdateWeatherCell(int AltLayer, Cell cell, WeatherCell wcell)
         {
-            float TLR = -6.5f;//-(LiveMap[AltLayer + 1][cell].Temperature - LiveMap[AltLayer][cell].Temperature);
+            float TLR;
+            if(AltLayer + 1 > LiveMap.Count-1)
+            {
+                TLR = -(2.7f - LiveMap[AltLayer][cell].Temperature);
+                
+            }
+            else
+            {
+               TLR = -(LiveMap[AltLayer + 1][cell].Temperature - LiveMap[AltLayer][cell].Temperature);
+                
+            }
 
-            wcell.Temperature = (float)Math.Max(Vector3.Dot(cell.Position, sunDir), 0);
-            wcell.Pressure = WeatherFunctions.calculatePressure(wcell.Pressure, TLR, wcell.Temperature, wcell.Altitude, 
-                (LiveMap[AltLayer + 1][cell].Altitude - wcell.Altitude), geeASL, MMOA);
+            wcell.Temperature = tempCallback(AltLayer, cell);
 
-            wcell.Density = WeatherFunctions.calculateDensity(wcell.Density, TLR, wcell.Temperature, wcell.Altitude,
-                (LiveMap[AltLayer +1][cell].Altitude - wcell.Altitude), geeASL, MMOA);
+            if (AltLayer + 1 > LiveMap.Count-1)
+            {
+                wcell.Pressure = WeatherFunctions.calculatePressure(wcell.Pressure, TLR, wcell.Temperature, wcell.Altitude,
+               ((wcell.Altitude + 2500) - wcell.Altitude), geeASL, MMOA);
+
+                wcell.Density = WeatherFunctions.calculateDensity(wcell.Density, TLR, wcell.Temperature, wcell.Altitude,
+                    ((wcell.Altitude + 2500) - wcell.Altitude), geeASL, MMOA);
+            }
+            else
+            {
+                wcell.Pressure = WeatherFunctions.calculatePressure(wcell.Pressure, TLR, wcell.Temperature, wcell.Altitude,
+                ((LiveMap[AltLayer +1][cell].Altitude) - wcell.Altitude), geeASL, MMOA);
+
+                wcell.Density = WeatherFunctions.calculateDensity(wcell.Density, TLR, wcell.Temperature, wcell.Altitude,
+                    ((LiveMap[AltLayer+1][cell].Altitude) - wcell.Altitude), geeASL, MMOA);
+            }
+            
 
             return wcell;
         }
