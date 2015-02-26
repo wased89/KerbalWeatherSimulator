@@ -16,10 +16,15 @@ namespace Weather
         private Vector3 sunDir;
         
         public Func<Vector3> sunCallback;
-        public Func<int,Cell, float> tempCallback;
+        
+        public Func<int, Cell, float> sunAngleCallback;
+
         public event Action bufferFlip;
+
+        public float bodyKSun = 1366f; //default for earth
         public float geeASL = 9.81f; //default for earth
         public float MMOA = 0.028964f; //default for earth
+
         private int CellsToUpdate = 500;
         private int currentIndex;
 
@@ -65,12 +70,20 @@ namespace Weather
                 BufferMap.Add(buffer);
                 //Debug.Log("Finished adding layer: " + AltLayer);
             }
-            
+            LateInit();
         }
 
-        public void SetTemperatureFunction(Func<int, Cell, float> func)
+        void LateInit()
         {
-            this.tempCallback = func;
+            foreach(Cell cell in Cell.AtLevel(level))
+            {
+                Heating.initShortwaves(this, cell);
+            }
+        }
+
+        public void SetSunAngleFunction(Func<int,Cell,float> func)
+        {
+            this.sunAngleCallback = func;
         }
 
         public void SetCellsToUpdate(int numb)
@@ -80,6 +93,11 @@ namespace Weather
         public void SetMolarMassOfAir(float numb)
         {
             this.MMOA = numb;
+        }
+
+        public void SetBodyKSun(float numb)
+        {
+            this.bodyKSun = numb;
         }
 
         public void SetInitTempOfCell(float temperature, int AltLayer, Cell cell)
@@ -105,28 +123,28 @@ namespace Weather
 
         public void UpdateNCells(int CellsToUpdate)
         {
-            int cellsToProcess = (int)Cell.CountAtLevel(level) - currentIndex;
-            if(cellsToProcess < CellsToUpdate)
-            {
-                CellsToUpdate = (int)Cell.CountAtLevel(level) - cellsToProcess;
-            }
+            
+            CellsToUpdate = (int)Math.Min(Cell.CountAtLevel(level), currentIndex + CellsToUpdate);
 
-            for(int i = 0; i < CellsToUpdate; i ++)
+            while(currentIndex < CellsToUpdate)
             {
-                for (int AltLayer = 0; AltLayer < LiveMap.Count; AltLayer++ )
+                //Debug.Log(currentIndex + ", " + Cell.CountAtLevel(level));
+                for (int AltLayer = 0; AltLayer < LiveMap.Count; AltLayer++)
                 {
                     //Debug.Log("Currently Updating Cell: "+ currentIndex);
+
                     Cell cell = new Cell((uint)currentIndex);
                     WeatherCell temp = LiveMap[AltLayer][cell];
                     BufferMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell, temp);
                 }
-                
                 currentIndex++;
-                
             }
-            if (currentIndex == (int)Cell.CountAtLevel(level))
+
+            
+            if (currentIndex >= (int)Cell.CountAtLevel(level)-1)
             {
                 //Don't Worry, it makes sense. Trust me.
+                Debug.Log("Resetting Index!");
                 List<CellMap<WeatherCell>> temp = LiveMap;
                 LiveMap = BufferMap;
                 BufferMap = temp;
@@ -154,7 +172,7 @@ namespace Weather
                 
             }
 
-            wcell.Temperature = tempCallback(AltLayer, cell);
+            wcell.Temperature = sunAngleCallback(AltLayer, cell);
 
             if (AltLayer + 1 > LiveMap.Count-1)
             {
