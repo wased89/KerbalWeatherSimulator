@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
-using Weather;
+using KerbalWeatherSimulator;
 using GeodesicGrid;
 
 namespace GUIUtils
@@ -16,6 +16,7 @@ namespace GUIUtils
         Texture2D displayTex;
         Mesh displayMesh;
         SunMove sunMove;
+        List<WindTestShit> testShits = new List<WindTestShit>();
         
 
         public SimulatorDisplay(PlanetSimulator pSim, DisplayMapType dMapType)
@@ -24,7 +25,11 @@ namespace GUIUtils
             this.mapType = dMapType;
             InitTexture();
             InitObject();
-            
+            foreach(Cell cell in Cell.AtLevel(3))
+            {
+                testShits.Add(new WindTestShit(pSim, cell.Position));
+            }
+            //testShits.Add(new WindTestShit(pSim, Vector3.one.normalized));
 
         }
 
@@ -50,6 +55,14 @@ namespace GUIUtils
             MF.mesh = displayMesh;
             
 
+        }
+
+        public void Update()
+        {
+            foreach(WindTestShit wts in testShits)
+            {
+                wts.Update();
+            }
         }
 
         public void OnBufferChange()
@@ -96,17 +109,25 @@ namespace GUIUtils
         }
         void WindMap()
         {
+            Vector2[] UV = new Vector2[displayMesh.vertexCount];
             foreach (KeyValuePair<Cell, WeatherCell> kvp in pSim.LiveMap[0])
             {
-
+                float normValue = kvp.Value.WindDirection.magnitude / 50f;
+                if (normValue > 1f) { normValue = 1f; }
+                UV[kvp.Key.Index] = new Vector2(0.5f, (normValue + 0.05f) * 0.9f);
             }
+            displayMesh.uv = UV;
         }
         void PressureMap()
         {
+            Vector2[] UV = new Vector2[displayMesh.vertexCount];
             foreach (KeyValuePair<Cell, WeatherCell> kvp in pSim.LiveMap[0])
             {
-
+                float normValue = (kvp.Value.Pressure - 95000f)/10000f;
+                if (normValue > 1f) { normValue = 1f; }
+                UV[kvp.Key.Index] = new Vector2(0.5f, (normValue + 0.05f) * 0.9f);
             }
+            displayMesh.uv = UV;
         }
         void AltitudeMap()
         {

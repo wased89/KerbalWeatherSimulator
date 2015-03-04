@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using UnityEngine;
-using Weather;
+using KerbalWeatherSimulator;
 using GUIUtils;
+using GeodesicGrid;
 
-namespace KerbalWeatherSystems
+namespace KerbalWeatherSimulator
 {
     public class HeadMaster : MonoBehaviour
     {
@@ -26,10 +27,11 @@ namespace KerbalWeatherSystems
         void Awake()
         {
             sunMove = new SunMove();
-            pSim = new PlanetSimulator(6, 1, SunFunction);
-            simDisplay = new SimulatorDisplay(pSim, DisplayMapType.HEAT_MAP);
+            pSim = new PlanetSimulator(6, 1, SunFunction, sunAngle);
+            simDisplay = new SimulatorDisplay(pSim, DisplayMapType.PRESSURE_MAP);
             aRenderer = new AxisRenderer();
-
+            
+            
             pSim.bufferFlip += simDisplay.OnBufferChange;
 
 
@@ -44,9 +46,10 @@ namespace KerbalWeatherSystems
 
         void Update()
         {
-            //pSim.Update();
-            //sunMove.Update(SunFunction);
-            //HandleKeyInput();
+            pSim.Update();
+            sunMove.Update();
+            simDisplay.Update();
+            HandleKeyInput();
         }
 
         void FixedUpdate()
@@ -154,11 +157,13 @@ namespace KerbalWeatherSystems
             return sun.transform.position.normalized;
             //return new Vector3(x , y, z );
         }
-
-        public static bool Test()
+        public float sunAngle(Vector3 sunDir, int AltLayer, Cell cell)
         {
-            return true;
+
+            return Mathf.Max(Vector3.Dot(cell.Position, sunDir),0);
+
         }
+
 
     }
 }

@@ -4,20 +4,26 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using GeodesicGrid;
+using Random = UnityEngine.Random;
 
-namespace Weather
+namespace KerbalWeatherSimulator
 {
     public class PlanetSimulator
     {
-        private GameObject renderObject;
+        //fdasfdafdas
         public List<CellMap<WeatherCell>> LiveMap = new List<CellMap<WeatherCell>>();
         public List<CellMap<WeatherCell>> BufferMap = new List<CellMap<WeatherCell>>();
-        private Vector3[] directionVertex;
-        private Vector3 sunDir;
         
-        public Func<Vector3> sunCallback;
+
+        public Vector3 sunDir
+        {
+            private set;
+            get;
+        }
         
-        public Func<int, Cell, float> sunAngleCallback;
+        private Func<Vector3> sunCallback;
+        
+        private Func<Vector3, int, Cell, float> sunAngleCallback;
 
         public event Action bufferFlip;
 
@@ -36,12 +42,13 @@ namespace Weather
             private set;
         }
 
-        public PlanetSimulator(int gridLevel, int Layers, Func<Vector3> sunCallback)
+        public PlanetSimulator(int gridLevel, int Layers, Func<Vector3> sunDirCallback, Func<Vector3, int, Cell, float> sunAngleCallback)
         {
             //Callbacks are delegates that gives you shit, like Func<Vector3>
             //will match a function with return of vector3, useful shit btw.
-            this.sunCallback = sunCallback;
-            sunDir = sunCallback();
+            this.sunCallback = sunDirCallback;
+            this.sunAngleCallback = sunAngleCallback;
+            sunDir = sunDirCallback();
             Generate(gridLevel, Layers);
         }
 
@@ -58,16 +65,19 @@ namespace Weather
             {
                 //Debug.Log("I'm currently on layer: " + AltLayer);
                 CellMap<WeatherCell> buffer = new CellMap<WeatherCell>(gridLevel);
+                CellMap<WeatherCell> buffer2 = new CellMap<WeatherCell>(gridLevel);
                 foreach (Cell cell in Cell.AtLevel(gridLevel))
                 {
                     
                     WeatherCell temp = new WeatherCell();
                     temp = WeatherCell.GetDefaultWeatherCell();
+                    temp.Pressure = GenerateRandomPressure(cell);
                     buffer[cell] = temp;
+                    buffer2[cell] = temp;
 
                 }
                 LiveMap.Add(buffer);
-                BufferMap.Add(buffer);
+                BufferMap.Add(buffer2);
                 //Debug.Log("Finished adding layer: " + AltLayer);
             }
             LateInit();
@@ -77,11 +87,11 @@ namespace Weather
         {
             foreach(Cell cell in Cell.AtLevel(level))
             {
-                Heating.initShortwaves(this, cell);
+                //Heating.initShortwaves(this, cell);
             }
         }
 
-        public void SetSunAngleFunction(Func<int,Cell,float> func)
+        public void SetSunAngleFunction(Func<Vector3, int,Cell,float> func)
         {
             this.sunAngleCallback = func;
         }
@@ -98,6 +108,16 @@ namespace Weather
         public void SetBodyKSun(float numb)
         {
             this.bodyKSun = numb;
+        }
+        public float GenerateRandomPressure(Cell cell)
+        {
+            // pressure = 101325 + Math.Rand(0-50)
+            
+            return 101325f + ((Mathf.Sin(cell.Position.x * 10f) * Mathf.Sin(cell.Position.z * 10f)) * 5000f);
+        }
+        public float RandomPressure(int AltLayer, Cell cell)
+        {
+            return 101325f + Random.Range(-5000f, 5000f); //Random.Range(-5000f,5000f);
         }
 
         public void SetInitTempOfCell(float temperature, int AltLayer, Cell cell)
@@ -119,6 +139,13 @@ namespace Weather
         public void Update()
         {
             UpdateNCells(CellsToUpdate);
+        }
+
+        public void CalculateCoriolisAcc()
+        {
+            //ac = -2(angularVelocity vector) X v
+            //X = cross, v = velocity of object
+            //ac = -2 * Vector3.Cross(angularVelocity, v)
         }
 
         public void UpdateNCells(int CellsToUpdate)
@@ -144,7 +171,7 @@ namespace Weather
             if (currentIndex >= (int)Cell.CountAtLevel(level)-1)
             {
                 //Don't Worry, it makes sense. Trust me.
-                Debug.Log("Resetting Index!");
+                //Debug.Log("Resetting Index!");
                 List<CellMap<WeatherCell>> temp = LiveMap;
                 LiveMap = BufferMap;
                 BufferMap = temp;
@@ -172,25 +199,26 @@ namespace Weather
                 
             }
 
-            wcell.Temperature = sunAngleCallback(AltLayer, cell);
+            wcell.Temperature = sunAngleCallback(sunDir, AltLayer, cell);
 
             if (AltLayer + 1 > LiveMap.Count-1)
             {
-                wcell.Pressure = WeatherFunctions.calculatePressure(wcell.Pressure, TLR, wcell.Temperature, wcell.Altitude,
-               ((wcell.Altitude + 2500) - wcell.Altitude), geeASL, MMOA);
+                //wcell.Pressure = WeatherFunctions.calculatePressure(wcell.Pressure, TLR, wcell.Temperature, wcell.Altitude,
+               //((wcell.Altitude + 2500) - wcell.Altitude), geeASL, MMOA);
 
-                wcell.Density = WeatherFunctions.calculateDensity(wcell.Density, TLR, wcell.Temperature, wcell.Altitude,
-                    ((wcell.Altitude + 2500) - wcell.Altitude), geeASL, MMOA);
+                //wcell.Density = WeatherFunctions.calculateDensity(wcell.Density, TLR, wcell.Temperature, wcell.Altitude,
+                    //((wcell.Altitude + 2500) - wcell.Altitude), geeASL, MMOA);
             }
             else
             {
-                wcell.Pressure = WeatherFunctions.calculatePressure(wcell.Pressure, TLR, wcell.Temperature, wcell.Altitude,
-                ((LiveMap[AltLayer +1][cell].Altitude) - wcell.Altitude), geeASL, MMOA);
+                //wcell.Pressure = WeatherFunctions.calculatePressure(wcell.Pressure, TLR, wcell.Temperature, wcell.Altitude,
+                //((LiveMap[AltLayer +1][cell].Altitude) - wcell.Altitude), geeASL, MMOA);
 
-                wcell.Density = WeatherFunctions.calculateDensity(wcell.Density, TLR, wcell.Temperature, wcell.Altitude,
-                    ((LiveMap[AltLayer+1][cell].Altitude) - wcell.Altitude), geeASL, MMOA);
+                //wcell.Density = WeatherFunctions.calculateDensity(wcell.Density, TLR, wcell.Temperature, wcell.Altitude,
+                    //((LiveMap[AltLayer+1][cell].Altitude) - wcell.Altitude), geeASL, MMOA);
             }
-            
+            wcell.Pressure = RandomPressure(0, cell);
+            wcell.WindDirection = WeatherFunctions.CalculateWindVector(this, AltLayer, cell);
 
             return wcell;
         }

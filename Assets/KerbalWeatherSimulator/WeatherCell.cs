@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace Weather
+namespace KerbalWeatherSimulator
 {
     public struct WeatherCell
     {
@@ -71,7 +71,7 @@ namespace Weather
             //cell.isCellHigherPressure = false;
             cell.Albedo = 0.35f;
             cell.Altitude = 0;
-            cell.Density = 0;
+            cell.Density = 1.29f;
             cell.Humidity = 0;
             cell.Temperature = 0;
             cell.WindDirection = Vector3.zero;

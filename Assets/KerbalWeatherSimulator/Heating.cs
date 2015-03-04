@@ -5,7 +5,7 @@ using System.Text;
 using UnityEngine;
 using GeodesicGrid;
 
-namespace Weather
+namespace KerbalWeatherSimulator
 {
     public class Heating
     {
@@ -26,7 +26,7 @@ namespace Weather
 
                 if(index == buffer.Count-1) //is it top layer?
                 {
-                    if(false) //is not sunlight?
+                    if(isSunlight(pSim, index, cell)) //is not sunlight?
                     {
                         temp.SWAbsorbed = 0;
                         temp.SWReflected = 0;
@@ -74,7 +74,7 @@ namespace Weather
 
         public static float getSunlightAngle(PlanetSimulator pSim, int AltLayer,  Cell cell)
         {
-            Vector3 sunPos = pSim.sunCallback();
+            Vector3 sunPos = pSim.sunDir;
             Vector3 cellPos = cell.Position;
             return Vector3.Angle(cellPos, sunPos);
         }

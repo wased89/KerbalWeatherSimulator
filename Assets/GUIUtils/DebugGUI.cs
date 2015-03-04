@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
-using KerbalWeatherSystems;
-using Weather;
+using KerbalWeatherSimulator;
+using KerbalWeatherSimulator;
 
 namespace GUIUtils
 {

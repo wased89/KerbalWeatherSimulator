@@ -5,7 +5,7 @@ using System.Text;
 using UnityEngine;
 using GeodesicGrid;
 
-namespace Weather
+namespace KerbalWeatherSimulator
 {
     public class WeatherFunctions
     {
@@ -16,11 +16,11 @@ namespace Weather
         }
         public static float getLatitude(Cell cell)
         {
-            return (float)(Math.Acos(cell.Position.y/ Math.Sqrt(cell.Position.x * cell.Position.x + cell.Position.z * cell.Position.z)) * 180 / Math.PI);
+            return (float)(Math.Acos(cell.Position.y) * (180 / Math.PI))-90f;
         }
         public static float getLongitude(Cell cell)
         {
-            return (float)(Math.Atan2(cell.Position.z, cell.Position.x) * 180 / Math.PI);
+            return (float)(Math.Atan2(cell.Position.z, cell.Position.x) * (180 / Math.PI));
         }
         public static float getAltitude(PlanetSimulator pSim, int AltLayer, Cell cell)
         {
@@ -41,6 +41,40 @@ namespace Weather
         {
             return true;
         }
+
+        
+
+        public static Vector3 CalculateWindVector(PlanetSimulator pSim, int AltLayer, Cell cell)
+        {
+            //Debug.Log("Calcing wind vector");
+            Vector3 resultant = Vector3.zero;
+            foreach (Cell neighbour in cell.GetNeighbors(pSim.level))
+            {
+                float deltaPressure = pSim.LiveMap[AltLayer][cell].Pressure - pSim.LiveMap[AltLayer][neighbour].Pressure;
+                
+                Vector3 cellVector = cell.Position - neighbour.Position;
+                float neighbourDistance = cellVector.magnitude;
+                cellVector.Normalize();
+                if (deltaPressure == 0f)
+                {
+                    continue;
+                }
+                
+                float acc = (-1 / pSim.LiveMap[AltLayer][cell].Density) * (deltaPressure / neighbourDistance);
+                
+                //v = a * sqrt(2d/a)
+                float windSpeed = acc * Mathf.Sqrt((2 * neighbourDistance) / Mathf.Abs(acc));
+                
+                //divide by 2 because opposite shit. Trust me, it is.
+                Vector3 windVector = new Vector3(cellVector.x * windSpeed / 2f, cellVector.y * windSpeed / 2f, cellVector.z * windSpeed / 2f);
+                
+                //TODO: Apply Coriolis to windVector
+                resultant += windVector;
+            }
+            
+            return resultant;
+        }
+
 
         public static float calculatePressure(float basePressure, float TLR, float temperature, float AOC, float HOL, float geeASL, float MMOA)
         {
@@ -70,6 +104,10 @@ namespace Weather
         public float getWindSpeed(PlanetSimulator pSim, int AltLayer, Cell cell)
         {
             return pSim.LiveMap[AltLayer][cell].WindDirection.magnitude;
+        }
+        public static float getCellAlbedo(PlanetSimulator pSim, int AltLayer, Cell cell)
+        {
+            return 0f;
         }
 
 

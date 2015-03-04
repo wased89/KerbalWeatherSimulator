@@ -30,7 +30,7 @@ public class AxisRenderer
         newTex.SetPixel(0, 0, color);
         newTex.Apply();
         lr.material.mainTexture = newTex;
-        lr.SetWidth(0.01f, 0.01f);
+        lr.SetWidth(0.1f, 0.1f);
         lr.SetVertexCount(2);
         lr.SetPosition(0, new Vector3(0,0,0));
         lr.SetPosition(1, position);
