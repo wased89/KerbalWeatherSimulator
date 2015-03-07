@@ -53,6 +53,7 @@ namespace KerbalWeatherSimulator
                 float deltaPressure = pSim.LiveMap[AltLayer][cell].Pressure - pSim.LiveMap[AltLayer][neighbour].Pressure;
                 
                 Vector3 cellVector = cell.Position - neighbour.Position;
+                
                 float neighbourDistance = cellVector.magnitude;
                 cellVector.Normalize();
                 if (deltaPressure == 0f)
@@ -68,7 +69,10 @@ namespace KerbalWeatherSimulator
                 //divide by 2 because opposite shit. Trust me, it is.
                 Vector3 windVector = new Vector3(cellVector.x * windSpeed / 2f, cellVector.y * windSpeed / 2f, cellVector.z * windSpeed / 2f);
                 
-                //TODO: Apply Coriolis to windVector
+                //Apply Coriolis to windVector
+                Vector3 corAcc = 2 * Vector3.Cross(windVector, pSim.angularVelocity + new Vector3(0f, Mathf.Cos(WeatherFunctions.getLatitude(cell)), Mathf.Sin(WeatherFunctions.getLatitude(cell))));
+                
+                windVector = windVector + corAcc;
                 resultant += windVector;
             }
             
@@ -83,11 +87,23 @@ namespace KerbalWeatherSimulator
 
             //Possible causes of error: temperature is 0 and TLR is 0, resulting in NaN
             //However temperature is in Kelvins, so that shouldn't ever happen
-
+            
+            
             float pressure = basePressure * Mathf.Pow((temperature / (temperature + TLR) * (AOC + HOL)),((geeASL * MMOA) / (8.31432f * TLR)));
             
             return pressure;
         }
+
+        public static float newCalculatePressure(PlanetSimulator pSim, int AltLayer, Cell cell)
+        {
+            //p1 * t2 = p2 * t1;
+            //p2 = (p1 * t2)/t1;
+
+            float pressure = (pSim.LiveMap[AltLayer][cell].Pressure * pSim.BufferMap[AltLayer][cell].Temperature)
+                / pSim.LiveMap[AltLayer][cell].Temperature;
+            return pressure;
+        }
+
 
         public static float calculateDensity(float baseDensity, float TLR, float temperature, float AOC, float HOL, float geeASL, float MMOA)
         {

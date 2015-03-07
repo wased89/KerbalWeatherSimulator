@@ -10,7 +10,7 @@ namespace KerbalWeatherSimulator
 {
     public class PlanetSimulator
     {
-        //fdasfdafdas
+        //ffffffff
         public List<CellMap<WeatherCell>> LiveMap = new List<CellMap<WeatherCell>>();
         public List<CellMap<WeatherCell>> BufferMap = new List<CellMap<WeatherCell>>();
         
@@ -24,6 +24,8 @@ namespace KerbalWeatherSimulator
         private Func<Vector3> sunCallback;
         
         private Func<Vector3, int, Cell, float> sunAngleCallback;
+
+        public Vector3 angularVelocity;
 
         public event Action bufferFlip;
 
@@ -42,12 +44,13 @@ namespace KerbalWeatherSimulator
             private set;
         }
 
-        public PlanetSimulator(int gridLevel, int Layers, Func<Vector3> sunDirCallback, Func<Vector3, int, Cell, float> sunAngleCallback)
+        public PlanetSimulator(int gridLevel, int Layers, Func<Vector3> sunDirCallback, Func<Vector3, int, Cell, float> sunAngleCallback, Vector3 angularVelocity)
         {
             //Callbacks are delegates that gives you shit, like Func<Vector3>
             //will match a function with return of vector3, useful shit btw.
             this.sunCallback = sunDirCallback;
             this.sunAngleCallback = sunAngleCallback;
+            this.angularVelocity = angularVelocity;
             sunDir = sunDirCallback();
             Generate(gridLevel, Layers);
         }
@@ -87,7 +90,8 @@ namespace KerbalWeatherSimulator
         {
             foreach(Cell cell in Cell.AtLevel(level))
             {
-                //Heating.initShortwaves(this, cell);
+                Heating.InitShortwaves(this, cell);
+                Heating.InitLongwaves(this, cell);
             }
         }
 
@@ -120,6 +124,7 @@ namespace KerbalWeatherSimulator
             return 101325f + Random.Range(-5000f, 5000f); //Random.Range(-5000f,5000f);
         }
 
+
         public void SetInitTempOfCell(float temperature, int AltLayer, Cell cell)
         {
             WeatherCell wcell = LiveMap[AltLayer][cell];
@@ -141,12 +146,7 @@ namespace KerbalWeatherSimulator
             UpdateNCells(CellsToUpdate);
         }
 
-        public void CalculateCoriolisAcc()
-        {
-            //ac = -2(angularVelocity vector) X v
-            //X = cross, v = velocity of object
-            //ac = -2 * Vector3.Cross(angularVelocity, v)
-        }
+        
 
         public void UpdateNCells(int CellsToUpdate)
         {
@@ -162,6 +162,8 @@ namespace KerbalWeatherSimulator
 
                     Cell cell = new Cell((uint)currentIndex);
                     WeatherCell temp = LiveMap[AltLayer][cell];
+                    Heating.CalculateShortwaves(this, AltLayer, cell);
+                    Heating.CalculateLongwaves(this, AltLayer, cell);
                     BufferMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell, temp);
                 }
                 currentIndex++;
@@ -199,7 +201,9 @@ namespace KerbalWeatherSimulator
                 
             }
 
-            wcell.Temperature = sunAngleCallback(sunDir, AltLayer, cell);
+            wcell.Temperature = Heating.CalculateTemperature(this, AltLayer, cell);
+            
+            if (cell.Index == 0) { Debug.Log("Temperature: " + wcell.Temperature); }
 
             if (AltLayer + 1 > LiveMap.Count-1)
             {
@@ -217,7 +221,9 @@ namespace KerbalWeatherSimulator
                 //wcell.Density = WeatherFunctions.calculateDensity(wcell.Density, TLR, wcell.Temperature, wcell.Altitude,
                     //((LiveMap[AltLayer+1][cell].Altitude) - wcell.Altitude), geeASL, MMOA);
             }
-            wcell.Pressure = RandomPressure(0, cell);
+            //wcell.Pressure = GenerateRandomPressure(cell);
+            wcell.Pressure = WeatherFunctions.newCalculatePressure(this, AltLayer, cell);
+            if (cell.Index == 0) { Debug.Log("Pressure: " + wcell.Pressure); }
             wcell.WindDirection = WeatherFunctions.CalculateWindVector(this, AltLayer, cell);
 
             return wcell;

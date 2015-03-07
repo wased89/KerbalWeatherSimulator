@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{0D17E8ED-02CC-F7D3-8359-4834493F19C8}</ProjectGuid>
+    <ProjectGuid>{218E28C7-FDB6-4172-AFA1-95392E51E255}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>KerbalWeatherSims</RootNamespace>
@@ -23,6 +23,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <NoWarn>0169</NoWarn>
+    <CodeAnalysisRuleSet>BasicDesignGuidelineRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisIgnoreGeneratedCode>false</CodeAnalysisIgnoreGeneratedCode>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -47,13 +50,11 @@
   <ItemGroup>
     <Compile Include="Assets\GUIUtils\AxisRenderer.cs" />
     <Compile Include="Assets\GUIUtils\DebugGUI.cs" />
-    <Compile Include="Assets\GUIUtils\SimulatorDisplay.cs" />
     <Compile Include="Assets\HeadMaster.cs" />
-    <Compile Include="Assets\Weather\Heating.cs" />
-    <Compile Include="Assets\Weather\PlanetSimulator.cs" />
-    <Compile Include="Assets\Weather\SunMove.cs" />
-    <Compile Include="Assets\Weather\WeatherCell.cs" />
-    <Compile Include="Assets\Weather\WeatherFunctions.cs" />
+    <Compile Include="Assets\KerbalWeatherSimulator\Heating.cs" />
+    <Compile Include="Assets\KerbalWeatherSimulator\PlanetSimulator.cs" />
+    <Compile Include="Assets\KerbalWeatherSimulator\WeatherCell.cs" />
+    <Compile Include="Assets\KerbalWeatherSimulator\WeatherFunctions.cs" />
     <None Include="Assets\GeodesicGrid-LICENSE.txt" />
     <Reference Include="UnityEngine.UI">
       <HintPath>C:/Program Files (x86)/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/4.6.2/UnityEngine.UI.dll</HintPath>

@@ -31,7 +31,7 @@ namespace KerbalWeatherSimulator
             double sunX = Math.Cos(sunAngle) * Math.Cos(sunY);
             double sunZ = Math.Sin(sunAngle) * Math.Cos(sunY);
             
-            Vector3 newPosition = new Vector3((float)sunX * 5f, (float)sunY * 5f, (float)sunZ * 5f);
+            Vector3 newPosition = new Vector3((float)sunX * 5f, 0f, (float)sunZ * 5f);
             sun.transform.position = newPosition;
 
             light.transform.position = sun.transform.position;

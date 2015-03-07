@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using KerbalWeatherSimulator;
-using KerbalWeatherSimulator;
 
 namespace GUIUtils
 {
@@ -18,7 +17,9 @@ namespace GUIUtils
 
         public DebugGUI(PlanetSimulator pSim)
         {
-
+            GUILayout.Label("Layer: ");
+            GUILayout.Label("Cell: ");
+            GUILayout.Label("Pressure: ");
         }
 
         public DebugGUI(Heating heat)
