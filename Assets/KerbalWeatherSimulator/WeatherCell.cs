@@ -8,6 +8,8 @@ namespace KerbalWeatherSimulator
 {
     public struct WeatherCell
     {
+        //public static bool operator !=(WeatherCell a, WeatherCell b);
+        //public static bool operator ==(WeatherCell a, WeatherCell b);
         //Private Variables
 
 
@@ -73,7 +75,7 @@ namespace KerbalWeatherSimulator
             cell.Altitude = 0;
             cell.Density = 1.29f;
             cell.Humidity = 0;
-            cell.Temperature = 0;
+            cell.Temperature = 1;
             cell.WindDirection = Vector3.zero;
             //cell.WindSpeed = 0;
             cell.Pressure = 101325f;

@@ -5,13 +5,12 @@ using System.Text;
 using UnityEngine;
 using KerbalWeatherSimulator;
 
-namespace KerbalWeatherSimulator
+namespace ObjectSim
 {
     class SunMove
     {
         GameObject sun;
         GameObject light;
-        
         
         private float sunAngle;
 
@@ -36,6 +35,7 @@ namespace KerbalWeatherSimulator
 
             light.transform.position = sun.transform.position;
             light.transform.rotation = Quaternion.LookRotation(-newPosition);
+
         }
 
         

@@ -87,9 +87,17 @@ namespace KerbalWeatherSimulator
 
             //Possible causes of error: temperature is 0 and TLR is 0, resulting in NaN
             //However temperature is in Kelvins, so that shouldn't ever happen
+            float pressure;
+            if(TLR == 0)
+            {
+                pressure = basePressure * Mathf.Exp(((-geeASL * MMOA * (AOC - HOL) )/ (8.31432f * temperature)));
+            }
+            else
+            {
+                pressure = basePressure * Mathf.Pow((temperature / ((temperature + (TLR * 1000)) * (AOC + HOL))), ((geeASL * MMOA) / (8.31432f * (TLR * 1000))));
+            }
             
             
-            float pressure = basePressure * Mathf.Pow((temperature / (temperature + TLR) * (AOC + HOL)),((geeASL * MMOA) / (8.31432f * TLR)));
             
             return pressure;
         }
@@ -98,7 +106,10 @@ namespace KerbalWeatherSimulator
         {
             //p1 * t2 = p2 * t1;
             //p2 = (p1 * t2)/t1;
-
+            if (pSim.LiveMap[AltLayer][cell].Temperature == 0)
+            {
+                //Debug.Log("Temp is zero!");
+            }
             float pressure = (pSim.LiveMap[AltLayer][cell].Pressure * pSim.BufferMap[AltLayer][cell].Temperature)
                 / pSim.LiveMap[AltLayer][cell].Temperature;
             return pressure;
@@ -109,7 +120,17 @@ namespace KerbalWeatherSimulator
         {
             //Things we need: base density of level, temp, TLR, altitude, height of cell, geeASL, Molar mass of air
             //universal gas constant for air
-            float density = baseDensity * Mathf.Pow((((temperature + TLR) * ((AOC + HOL)-AOC)) / temperature),((-(geeASL * MMOA) / (8.31432f * TLR)) -1f));
+            if (temperature == 0) { Debug.Log("TEMP IS ZERO! INFINITY INCOMING!"); }
+            float density;
+            if (TLR == 0f) 
+            {
+                density = baseDensity * Mathf.Exp(((-geeASL * MMOA * (AOC - HOL)) / (8.31432f * temperature)));
+            }
+            else
+            {
+                density = baseDensity * Mathf.Pow(1-((((temperature + TLR) * ((AOC + HOL)-AOC)) / temperature)), ((-(geeASL * MMOA) / (8.31432f * TLR)) -1f));
+            }
+            
             return density;
         }
 

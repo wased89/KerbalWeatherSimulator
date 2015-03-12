@@ -56,7 +56,8 @@
      <Compile Include="Assets\KerbalWeatherSimulator\PlanetSimulator.cs" />
      <Compile Include="Assets\KerbalWeatherSimulator\WeatherCell.cs" />
      <Compile Include="Assets\KerbalWeatherSimulator\WeatherFunctions.cs" />
-     <Compile Include="Assets\Weather\SunMove.cs" />
+     <Compile Include="Assets\ObjectSim\CloudSystem.cs" />
+     <Compile Include="Assets\ObjectSim\SunMove.cs" />
      <None Include="Assets\GeodesicGrid-LICENSE.txt" />
  <Reference Include="UnityEngine.UI">
  <HintPath>C:/Program Files (x86)/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/4.6.2/UnityEngine.UI.dll</HintPath>

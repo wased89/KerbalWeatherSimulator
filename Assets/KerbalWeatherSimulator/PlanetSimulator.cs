@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 //using System.Linq;
 using System.Text;
@@ -11,6 +12,7 @@ namespace KerbalWeatherSimulator
     public class PlanetSimulator
     {
         //ffffffff
+        
         public List<CellMap<WeatherCell>> LiveMap = new List<CellMap<WeatherCell>>();
         public List<CellMap<WeatherCell>> BufferMap = new List<CellMap<WeatherCell>>();
         
@@ -29,6 +31,7 @@ namespace KerbalWeatherSimulator
 
         public event Action bufferFlip;
 
+        public float bodyRadius = 6371000f; //default for earth
         public float bodyKSun = 1366f; //default for earth
         public float geeASL = 9.81f; //default for earth
         public float MMOA = 0.028964f; //default for earth
@@ -74,7 +77,14 @@ namespace KerbalWeatherSimulator
                     
                     WeatherCell temp = new WeatherCell();
                     temp = WeatherCell.GetDefaultWeatherCell();
+                    temp.Altitude = AltLayer * 2500;
+                    int rnd = Random.Range(0,2);
+                    if (rnd == 0) { temp.Clouded = false; }
+                    else { temp.Clouded = true; }
+                    temp.Albedo = Heating.calculateAlbedo(this, AltLayer, cell);
                     temp.Pressure = GenerateRandomPressure(cell);
+                    temp.Temperature = 19.45f;
+                    
                     buffer[cell] = temp;
                     buffer2[cell] = temp;
 
@@ -88,11 +98,26 @@ namespace KerbalWeatherSimulator
 
         void LateInit()
         {
+            Debug.Log("LateInit!");
+
+            for (int AltLayer = 0; AltLayer < LiveMap.Count; AltLayer++ )
+            {
+                foreach(Cell cell in Cell.AtLevel(level))
+                {
+                    WeatherCell temp = LiveMap[AltLayer][cell];
+
+                    temp.Emissivity = Heating.calculateEmissivity(this, AltLayer, cell);
+                    temp.Transmissivity = Heating.calculateTransmissivity(this, AltLayer, cell);
+                    LiveMap[AltLayer][cell] = temp;
+                }
+            }
+
             foreach(Cell cell in Cell.AtLevel(level))
             {
                 Heating.InitShortwaves(this, cell);
                 Heating.InitLongwaves(this, cell);
             }
+            
         }
 
         public void SetSunAngleFunction(Func<Vector3, int,Cell,float> func)
@@ -124,6 +149,10 @@ namespace KerbalWeatherSimulator
             return 101325f + Random.Range(-5000f, 5000f); //Random.Range(-5000f,5000f);
         }
 
+        public float RandomTemperature(int AltLayer, Cell cell)
+        {
+            return 273.15f + (sunAngleCallback(sunDir,AltLayer, cell) * 150f);
+        }
 
         public void SetInitTempOfCell(float temperature, int AltLayer, Cell cell)
         {
@@ -144,9 +173,8 @@ namespace KerbalWeatherSimulator
         public void Update()
         {
             UpdateNCells(CellsToUpdate);
+            
         }
-
-        
 
         public void UpdateNCells(int CellsToUpdate)
         {
@@ -201,33 +229,42 @@ namespace KerbalWeatherSimulator
                 
             }
 
-            wcell.Temperature = Heating.CalculateTemperature(this, AltLayer, cell);
+            wcell.Temperature = RandomTemperature(AltLayer, cell);
+            //wcell.Temperature = 273.15f + sunAngleCallback(sunDir,AltLayer, cell);
+            //wcell.Temperature = Heating.CalculateTemperature(this, AltLayer, cell);
             
-            if (cell.Index == 0) { Debug.Log("Temperature: " + wcell.Temperature); }
 
             if (AltLayer + 1 > LiveMap.Count-1)
             {
-                //wcell.Pressure = WeatherFunctions.calculatePressure(wcell.Pressure, TLR, wcell.Temperature, wcell.Altitude,
-               //((wcell.Altitude + 2500) - wcell.Altitude), geeASL, MMOA);
+                wcell.Pressure = WeatherFunctions.calculatePressure(101325f, TLR, wcell.Temperature, wcell.Altitude,
+                ((wcell.Altitude + 2500) - wcell.Altitude), geeASL, MMOA);
 
-                //wcell.Density = WeatherFunctions.calculateDensity(wcell.Density, TLR, wcell.Temperature, wcell.Altitude,
-                    //((wcell.Altitude + 2500) - wcell.Altitude), geeASL, MMOA);
+                wcell.Density = WeatherFunctions.calculateDensity(1.235f, TLR, wcell.Temperature, wcell.Altitude,
+                    ((wcell.Altitude + 2500) - wcell.Altitude), geeASL, MMOA);
             }
             else
             {
-                //wcell.Pressure = WeatherFunctions.calculatePressure(wcell.Pressure, TLR, wcell.Temperature, wcell.Altitude,
-                //((LiveMap[AltLayer +1][cell].Altitude) - wcell.Altitude), geeASL, MMOA);
+                wcell.Pressure = WeatherFunctions.calculatePressure(101325f, TLR, wcell.Temperature, wcell.Altitude,
+                ((LiveMap[AltLayer +1][cell].Altitude) - wcell.Altitude), geeASL, MMOA);
 
-                //wcell.Density = WeatherFunctions.calculateDensity(wcell.Density, TLR, wcell.Temperature, wcell.Altitude,
-                    //((LiveMap[AltLayer+1][cell].Altitude) - wcell.Altitude), geeASL, MMOA);
+                wcell.Density = WeatherFunctions.calculateDensity(1.235f, TLR, wcell.Temperature, wcell.Altitude,
+                    ((LiveMap[AltLayer+1][cell].Altitude) - wcell.Altitude), geeASL, MMOA);
             }
             //wcell.Pressure = GenerateRandomPressure(cell);
-            wcell.Pressure = WeatherFunctions.newCalculatePressure(this, AltLayer, cell);
-            if (cell.Index == 0) { Debug.Log("Pressure: " + wcell.Pressure); }
+            //wcell.Pressure = WeatherFunctions.newCalculatePressure(this, AltLayer, cell);
+            
             wcell.WindDirection = WeatherFunctions.CalculateWindVector(this, AltLayer, cell);
+
+            if (cell.Index == 10 && AltLayer == 0) { Debug.Log("Albedo: " + wcell.Albedo); }
+            if (cell.Index == 10 && AltLayer == 0) { Debug.Log("Temperature: " + wcell.Temperature); }
+            if (cell.Index == 10 && AltLayer == 0) { Debug.Log("Pressure: " + wcell.Pressure); }
+            if (cell.Index == 10 && AltLayer == 0) { Debug.Log("Density: " + wcell.Density); }
+            if (cell.Index == 10 && AltLayer == 0) { Debug.Log("Emissivity: " + wcell.Emissivity); }
+            if (cell.Index == 10 && AltLayer == 0) { Debug.Log("SunAngle: " + Heating.getSunlightAngle(this, AltLayer, cell)); }
 
             return wcell;
         }
 
     }
+
 }

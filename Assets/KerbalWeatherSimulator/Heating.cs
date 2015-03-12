@@ -169,6 +169,7 @@ namespace KerbalWeatherSimulator
             //Lout = e,layer * SBC * T,layer^4
             //t^4 = Lout/ e,layer * SBC
             //t = 4throot(Lout/e,layer * SBC)
+            
 
             return Mathf.Pow((float)(((pSim.BufferMap[AltLayer][cell].SWAbsorbed + pSim.BufferMap[AltLayer][cell].LWIn) / 2) /
                 (pSim.BufferMap[AltLayer][cell].Emissivity * SBC)), 0.25f);
@@ -210,6 +211,64 @@ namespace KerbalWeatherSimulator
             }
         }
 
+        public static float calculateAlbedo(PlanetSimulator pSim, int AltLayer, Cell cell)
+        {
+            return 0.30f * Mathf.Pow(0.75f, AltLayer);
+        }
+        public static float calculateEmissivity(PlanetSimulator pSim, int AltLayer, Cell cell)
+        {
+            if(pSim.LiveMap[0][cell].isOcean)
+            {
+                return 0.96f;
+            }
+            else if(WeatherFunctions.getLatitude(cell) > 60 && pSim.LiveMap[0][cell].isOcean == false)
+            {
+                return 0.97f;
+
+            }
+            else
+            {
+                return 0.92f;
+            }
+            
+        }
+        internal static float calculateTransmissivity(PlanetSimulator pSim, int AltLayer, Cell cell)
+        {
+            //Beers-lambert law covers transmissivity
+            //basically: transmitting rad = starting rad * e^(-m*optical depth)
+            //rearranged: transmissivity = e^(-m * optical depth)
+            //-m is the optical airmass
+            //which is a scaling parameter based on the amount of air that the ray will travel through
+            //optical depth is the "opacity" of the air and is dependant on composition
+            //optical airmass is dependant on the thickness of the layers, and pressure
+
+            float opticalDepth = calculateOpticalDepth(pSim, cell);
+            float opticalAirMass = calculateAtmosphericPathLength(pSim, AltLayer, cell);
+            float T = Mathf.Pow((float)Math.E, (-opticalAirMass * opticalDepth));
+            return T * (1 - pSim.LiveMap[AltLayer][cell].Albedo);
+        }
+
+        internal static float calculateAtmosphericPathLength(PlanetSimulator pSim, int AltLayer, Cell cell)
+        {
+
+            float zenithAngle = getSunlightAngle(pSim, AltLayer, cell) * Mathf.Deg2Rad;
+            float ymax = pSim.LiveMap[pSim.LiveMap.Count - 1][cell].Altitude + 2500f;
+            float stuff = (float)Math.Sqrt(
+                (((pSim.bodyRadius + pSim.LiveMap[AltLayer][cell].Altitude) / ymax) * ((pSim.bodyRadius + pSim.LiveMap[AltLayer][cell].Altitude) / ymax)) *
+                (Mathf.Cos(zenithAngle) * Mathf.Cos(zenithAngle)) +
+                ((2 * pSim.bodyRadius) / (ymax * ymax)) *
+                (ymax - pSim.LiveMap[AltLayer][cell].Altitude) -
+                ((ymax / ymax) * (ymax / ymax)) + 1 -
+                ((pSim.bodyRadius + pSim.LiveMap[AltLayer][cell].Altitude) / ymax) *
+                (Mathf.Cos(zenithAngle))
+                );
+            return stuff;
+        }
+        internal static float calculateOpticalDepth(PlanetSimulator pSim, Cell cell)
+        {
+            float opticalDepth = 0.002f; //Original: 0.2f
+            return opticalDepth;
+        }
         public static bool isSunlight(PlanetSimulator pSim, int AltLayer, Cell cell)
         {
             if(getSunlightAngle(pSim, AltLayer, cell) > 90)
@@ -230,10 +289,10 @@ namespace KerbalWeatherSimulator
             return Vector3.Angle(cellPos, sunPos);
         }
 
-        public static double calculateBodyKSun(double radius)
+        public static double calculateBodyKSun(double orbitRadius)
         {
             double numb;
-            numb = KSun / (4 * Math.PI * (radius * radius));
+            numb = KSun / (4 * Math.PI * (orbitRadius * orbitRadius));
             return numb;
         }
 

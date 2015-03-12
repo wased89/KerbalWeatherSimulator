@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,6 +8,7 @@ using UnityEngine;
 using KerbalWeatherSimulator;
 using GUIUtils;
 using GeodesicGrid;
+using ObjectSim;
 
 namespace KerbalWeatherSimulator
 {
@@ -15,7 +17,10 @@ namespace KerbalWeatherSimulator
         PlanetSimulator pSim;
         SimulatorDisplay simDisplay;
         SunMove sunMove;
+        CloudSystem cloudSystem;
         AxisRenderer aRenderer;
+        DebugGUI debug;
+        
 
         private GameObject mainCamera;
         private float cameraLat = Mathf.PI / 2f;
@@ -23,15 +28,16 @@ namespace KerbalWeatherSimulator
         private float cameraDistance = 2f;
         public static  float sunRotationSpeed = 0f;
         public static bool test = true;
-        private Vector3 angularVelocity = new Vector3(0,4.75f,0);
+        private Vector3 angularVelocity = new Vector3(0,2f,0);
 
         void Awake()
         {
             sunMove = new SunMove();
-            pSim = new PlanetSimulator(6, 5, SunFunction, sunAngle, angularVelocity);
+            pSim = new PlanetSimulator(5, 5, SunFunction, sunAngle, angularVelocity);
             simDisplay = new SimulatorDisplay(pSim, DisplayMapType.PRESSURE_MAP);
             aRenderer = new AxisRenderer();
-            
+            debug = new DebugGUI(pSim);
+            //cloudSystem = new CloudSystem(pSim);
             
             pSim.bufferFlip += simDisplay.OnBufferChange;
 
@@ -47,10 +53,13 @@ namespace KerbalWeatherSimulator
 
         void Update()
         {
+            HandleKeyInput();
             pSim.Update();
             sunMove.Update();
             simDisplay.Update();
-            HandleKeyInput();
+            //debug.Update();
+            //cloudSystem.UpdateParticleCells();
+            
         }
 
         void FixedUpdate()
@@ -58,6 +67,10 @@ namespace KerbalWeatherSimulator
 
         }
 
+        void OnGUI()
+        {
+            //debug.OnGUI();
+        }
         void Draw()
         {
 
@@ -163,6 +176,41 @@ namespace KerbalWeatherSimulator
 
             return Mathf.Max(Vector3.Dot(cell.Position, sunDir),0);
 
+        }
+
+
+        //Test code for coroutine setup
+
+        void testStart()
+        {
+            StartCoroutine(StepThroughCoroutine(UpdateTheCells(5)));
+        }
+
+        IEnumerator StepThroughCoroutine(IEnumerator crStepThrough)
+        {
+            if(Input.GetKeyDown(KeyCode.G) && crStepThrough.MoveNext())
+            {
+                yield return crStepThrough.Current;
+            }
+            else
+            {
+                yield return null;
+            }
+        }
+
+        IEnumerator UpdateTheCells(int gridLevel)
+        {
+            foreach(Cell cell in Cell.AtLevel(gridLevel))
+            {
+                yield return UpdateTheCell(cell);
+            }
+            
+        }
+
+        IEnumerator UpdateTheCell(Cell cell)
+        {
+            Debug.Log("Cell!");
+            yield return cell;
         }
 
 
