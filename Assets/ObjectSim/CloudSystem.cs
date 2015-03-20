@@ -76,7 +76,7 @@ namespace ObjectSim
             {
                 var temp = particleCellMap;
                 Particle p = temp[cell];
-                //pAnimator.force = pSim.LiveMap[0][cell].WindDirection.normalized;
+                pAnimator.force = pSim.LiveMap[0][cell].WindDirection.normalized;
                 
                 p.velocity = pSim.LiveMap[0][cell].WindDirection.normalized;
                 particles[cell.Index] = p;

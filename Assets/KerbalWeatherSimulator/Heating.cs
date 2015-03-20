@@ -17,13 +17,14 @@ namespace KerbalWeatherSimulator
 
         public static void InitShortwaves(PlanetSimulator pSim, Cell cell)
         {
+            //Debug.Log("Init shortwaves");
             for (int index = pSim.LiveMap.Count - 1; index > 0; index--)
             {
                 WeatherCell temp = pSim.LiveMap[index][cell];
-                float SunriseFactor = (float)(Mathf.Cos(WeatherFunctions.getLatitude(cell) * Mathf.Deg2Rad) +
-                    Mathf.Cos(getSunlightAngle(pSim, index, cell) * Mathf.Deg2Rad)) / 2f;
                 if (index == pSim.LiveMap.Count - 1) //Is it top layer?
                 {
+                    float SunriseFactor = (float)(Mathf.Cos(WeatherFunctions.getLatitude(cell) * Mathf.Deg2Rad) +
+                    Mathf.Cos(getSunlightAngle(pSim, index, cell) * Mathf.Deg2Rad)) / 2f;
                     //check for sunlight
                     if (isSunlight(pSim, index, cell))
                     {
@@ -64,12 +65,15 @@ namespace KerbalWeatherSimulator
             {
                 float SunriseFactor = (float)(Mathf.Cos(WeatherFunctions.getLatitude(cell) * Mathf.Deg2Rad) + 
                     Mathf.Cos(getSunlightAngle(pSim, AltLayer, cell) * Mathf.Deg2Rad)) / 2f;
+                //Debug.Log("Sunrise Factor: " + SunriseFactor); //checks out
                 //Do check to see if top layer is in sunlight
                 if(isSunlight(pSim, AltLayer, cell))
                 {
                     float bodyKSun = pSim.bodyKSun * SunriseFactor;
+                    //Debug.Log("bodyKSun: " + bodyKSun);
                     temp.SWReflected = bodyKSun * temp.Albedo;
                     temp.SWTransmitted = bodyKSun * temp.Transmissivity;
+                    //Debug.Log(temp.SWTransmitted); //top layer gives real values
                     temp.SWAbsorbed = bodyKSun *
                         (1 - temp.Albedo - temp.Transmissivity);
                 }
@@ -87,6 +91,7 @@ namespace KerbalWeatherSimulator
                 temp.SWTransmitted = 0f;
                 temp.SWAbsorbed = pSim.BufferMap[AltLayer + 1][cell].SWTransmitted *
                     (1 - temp.Albedo - temp.Transmissivity);
+                //Debug.Log(pSim.BufferMap[AltLayer +1][cell].SWTransmitted); //Gives 0
             }
             else //it's middle layers
             {
@@ -94,6 +99,7 @@ namespace KerbalWeatherSimulator
                 temp.SWTransmitted = pSim.BufferMap[AltLayer + 1][cell].SWTransmitted * temp.Transmissivity;
                 temp.SWAbsorbed = pSim.BufferMap[AltLayer + 1][cell].SWTransmitted *
                     (1 - temp.Albedo - temp.Transmissivity);
+                Debug.Log("Layer: "+ AltLayer + ", " + pSim.BufferMap[pSim.LiveMap.Count-1][cell].SWTransmitted); //gives 0
             }
             pSim.BufferMap[AltLayer][cell] = temp;
         }
@@ -115,6 +121,7 @@ namespace KerbalWeatherSimulator
         {
             WeatherCell temp = pSim.BufferMap[AltLayer][cell];
             temp.LWOut = temp.Emissivity * SBC * ToTheFourth(temp.Temperature);
+            pSim.BufferMap[AltLayer][cell] = temp;
         }
         internal static void CalculateTransmissions(PlanetSimulator pSim, int AltLayer, Cell cell)
         {
@@ -138,7 +145,7 @@ namespace KerbalWeatherSimulator
                 temp.LWOut = (1 - temp.Emissivity) *
                     (pSim.BufferMap[AltLayer - 1][cell].LWOut + pSim.BufferMap[AltLayer - 1][cell].LWTransmit);
             }
-
+            pSim.BufferMap[AltLayer][cell] = temp;
         }
         internal static void CalculateIncoming(PlanetSimulator pSim, int AltLayer, Cell cell)
         {
@@ -159,7 +166,7 @@ namespace KerbalWeatherSimulator
             {
                 temp.LWIn = temp.Emissivity * (pSim.BufferMap[AltLayer - 1][cell].LWOut + pSim.BufferMap[AltLayer - 1][cell].LWTransmit);
             }
-
+            pSim.BufferMap[AltLayer][cell] = temp;
 
         }
 
@@ -169,7 +176,8 @@ namespace KerbalWeatherSimulator
             //Lout = e,layer * SBC * T,layer^4
             //t^4 = Lout/ e,layer * SBC
             //t = 4throot(Lout/e,layer * SBC)
-            
+            CalculateShortwaves(pSim, AltLayer, cell);
+            CalculateLongwaves(pSim, AltLayer, cell);
 
             return Mathf.Pow((float)(((pSim.BufferMap[AltLayer][cell].SWAbsorbed + pSim.BufferMap[AltLayer][cell].LWIn) / 2) /
                 (pSim.BufferMap[AltLayer][cell].Emissivity * SBC)), 0.25f);
@@ -266,7 +274,7 @@ namespace KerbalWeatherSimulator
         }
         internal static float calculateOpticalDepth(PlanetSimulator pSim, Cell cell)
         {
-            float opticalDepth = 0.002f; //Original: 0.2f
+            float opticalDepth = 0.2f; //Original: 0.2f
             return opticalDepth;
         }
         public static bool isSunlight(PlanetSimulator pSim, int AltLayer, Cell cell)

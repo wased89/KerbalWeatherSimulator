@@ -25,7 +25,7 @@ namespace KerbalWeatherSimulator
         private GameObject mainCamera;
         private float cameraLat = Mathf.PI / 2f;
         private float cameraLong = 0f;
-        private float cameraDistance = 2f;
+        private float cameraDistance = 3f;
         public static  float sunRotationSpeed = 0f;
         public static bool test = true;
         private Vector3 angularVelocity = new Vector3(0,2f,0);
@@ -57,7 +57,7 @@ namespace KerbalWeatherSimulator
             pSim.Update();
             sunMove.Update();
             simDisplay.Update();
-            //debug.Update();
+            debug.Update();
             //cloudSystem.UpdateParticleCells();
             
         }
@@ -69,7 +69,7 @@ namespace KerbalWeatherSimulator
 
         void OnGUI()
         {
-            //debug.OnGUI();
+            debug.OnGUI();
         }
         void Draw()
         {

@@ -79,7 +79,7 @@ namespace KerbalWeatherSimulator
             cell.WindDirection = Vector3.zero;
             //cell.WindSpeed = 0;
             cell.Pressure = 101325f;
-            cell.Transmissivity = 0;
+            cell.Transmissivity = 1;
             cell.Emissivity = 0;
             cell.SWAbsorbed = 0;
             cell.SWReflected = 0;
