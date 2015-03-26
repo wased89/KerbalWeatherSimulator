@@ -49,12 +49,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\GUIUtils\AxisRenderer.cs" />
-    <Compile Include="Assets\GUIUtils\DebugGUI.cs" />
     <Compile Include="Assets\HeadMaster.cs" />
     <Compile Include="Assets\KerbalWeatherSimulator\Heating.cs" />
     <Compile Include="Assets\KerbalWeatherSimulator\PlanetSimulator.cs" />
     <Compile Include="Assets\KerbalWeatherSimulator\WeatherCell.cs" />
     <Compile Include="Assets\KerbalWeatherSimulator\WeatherFunctions.cs" />
+    <Compile Include="Assets\ObjectSim\CloudSystem.cs" />
     <None Include="Assets\GeodesicGrid-LICENSE.txt" />
     <Reference Include="UnityEngine.UI">
       <HintPath>C:/Program Files (x86)/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/4.6.2/UnityEngine.UI.dll</HintPath>

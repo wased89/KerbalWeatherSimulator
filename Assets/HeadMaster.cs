@@ -17,7 +17,7 @@ namespace KerbalWeatherSimulator
         PlanetSimulator pSim;
         SimulatorDisplay simDisplay;
         SunMove sunMove;
-        CloudSystem cloudSystem;
+        //CloudSystem cloudSystem;
         AxisRenderer aRenderer;
         DebugGUI debug;
         

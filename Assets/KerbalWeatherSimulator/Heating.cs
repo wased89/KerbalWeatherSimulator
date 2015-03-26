@@ -43,16 +43,16 @@ namespace KerbalWeatherSimulator
                 }
                 else if (index == 0) //is it bottom layer? No transmit
                 {
-                    temp.SWReflected = pSim.BufferMap[index + 1][cell].SWTransmitted * temp.Albedo;
+                    temp.SWReflected = pSim.LiveMap[index + 1][cell].SWTransmitted * temp.Albedo;
                     temp.SWTransmitted = 0f;
-                    temp.SWAbsorbed = pSim.BufferMap[index + 1][cell].SWTransmitted *
+                    temp.SWAbsorbed = pSim.LiveMap[index + 1][cell].SWTransmitted *
                         (1 - temp.Albedo - temp.Transmissivity);
                 }
                 else
                 {
-                    temp.SWReflected = pSim.BufferMap[index + 1][cell].SWTransmitted * temp.Albedo;
-                    temp.SWTransmitted = pSim.BufferMap[index + 1][cell].SWTransmitted * temp.Transmissivity;
-                    temp.SWAbsorbed = pSim.BufferMap[index + 1][cell].SWTransmitted *
+                    temp.SWReflected = pSim.LiveMap[index + 1][cell].SWTransmitted * temp.Albedo;
+                    temp.SWTransmitted = pSim.LiveMap[index + 1][cell].SWTransmitted * temp.Transmissivity;
+                    temp.SWAbsorbed = pSim.LiveMap[index + 1][cell].SWTransmitted *
                         (1 - temp.Albedo - temp.Transmissivity);
                 }
             }
@@ -76,6 +76,7 @@ namespace KerbalWeatherSimulator
                     //Debug.Log(temp.SWTransmitted); //top layer gives real values
                     temp.SWAbsorbed = bodyKSun *
                         (1 - temp.Albedo - temp.Transmissivity);
+                    
                 }
                 //Else, it's danky dark and this is where the sun don't shine
                 else
@@ -87,21 +88,21 @@ namespace KerbalWeatherSimulator
             }
             else if(AltLayer == 0) //Is it bottom layer? No transmit
             {
-                temp.SWReflected = pSim.BufferMap[AltLayer + 1][cell].SWTransmitted * temp.Albedo;
+                temp.SWReflected = pSim.LiveMap[AltLayer + 1][cell].SWTransmitted * temp.Albedo;
                 temp.SWTransmitted = 0f;
-                temp.SWAbsorbed = pSim.BufferMap[AltLayer + 1][cell].SWTransmitted *
+                temp.SWAbsorbed = pSim.LiveMap[AltLayer + 1][cell].SWTransmitted *
                     (1 - temp.Albedo - temp.Transmissivity);
                 //Debug.Log(pSim.BufferMap[AltLayer +1][cell].SWTransmitted); //Gives 0
             }
             else //it's middle layers
             {
-                temp.SWReflected = pSim.BufferMap[AltLayer + 1][cell].SWTransmitted * temp.Albedo;
-                temp.SWTransmitted = pSim.BufferMap[AltLayer + 1][cell].SWTransmitted * temp.Transmissivity;
-                temp.SWAbsorbed = pSim.BufferMap[AltLayer + 1][cell].SWTransmitted *
+                temp.SWReflected = pSim.LiveMap[AltLayer + 1][cell].SWTransmitted * temp.Albedo;
+                temp.SWTransmitted = pSim.LiveMap[AltLayer + 1][cell].SWTransmitted * temp.Transmissivity;
+                temp.SWAbsorbed = pSim.LiveMap[AltLayer + 1][cell].SWTransmitted *
                     (1 - temp.Albedo - temp.Transmissivity);
-                Debug.Log("Layer: "+ AltLayer + ", " + pSim.BufferMap[pSim.LiveMap.Count-1][cell].SWTransmitted); //gives 0
+                //Debug.Log("Layer: "+ AltLayer + ", " + pSim.BufferMap[pSim.LiveMap.Count-1][cell].SWTransmitted); //gives 0
             }
-            pSim.BufferMap[AltLayer][cell] = temp;
+            pSim.LiveMap[AltLayer][cell] = temp;
         }
 
 
@@ -119,13 +120,13 @@ namespace KerbalWeatherSimulator
 
         internal static void CalculateEmissions(PlanetSimulator pSim, int AltLayer, Cell cell)
         {
-            WeatherCell temp = pSim.BufferMap[AltLayer][cell];
+            WeatherCell temp = pSim.LiveMap[AltLayer][cell];
             temp.LWOut = temp.Emissivity * SBC * ToTheFourth(temp.Temperature);
-            pSim.BufferMap[AltLayer][cell] = temp;
+            pSim.LiveMap[AltLayer][cell] = temp;
         }
         internal static void CalculateTransmissions(PlanetSimulator pSim, int AltLayer, Cell cell)
         {
-            WeatherCell temp = pSim.BufferMap[AltLayer][cell];
+            WeatherCell temp = pSim.LiveMap[AltLayer][cell];
 
             if(AltLayer == 0) //ground layer, no transmit
             {
@@ -133,40 +134,40 @@ namespace KerbalWeatherSimulator
             }
             else if(AltLayer == 1) //layer above ground
             {
-                temp.LWTransmit = pSim.BufferMap[AltLayer - 1][cell].LWOut * (1 - temp.Emissivity);
+                temp.LWTransmit = pSim.LiveMap[AltLayer - 1][cell].LWOut * (1 - temp.Emissivity);
             }
             else if(AltLayer<= pSim.LiveMap.Count -2) //middle layers
             {
                 temp.LWOut = (1 - temp.Emissivity) *
-                    (pSim.BufferMap[AltLayer - 1][cell].LWOut + pSim.BufferMap[AltLayer - 1][cell].LWTransmit);
+                    (pSim.LiveMap[AltLayer - 1][cell].LWOut + pSim.LiveMap[AltLayer - 1][cell].LWTransmit);
             }
             else //Top layer 
             {
                 temp.LWOut = (1 - temp.Emissivity) *
-                    (pSim.BufferMap[AltLayer - 1][cell].LWOut + pSim.BufferMap[AltLayer - 1][cell].LWTransmit);
+                    (pSim.LiveMap[AltLayer - 1][cell].LWOut + pSim.LiveMap[AltLayer - 1][cell].LWTransmit);
             }
-            pSim.BufferMap[AltLayer][cell] = temp;
+            pSim.LiveMap[AltLayer][cell] = temp;
         }
         internal static void CalculateIncoming(PlanetSimulator pSim, int AltLayer, Cell cell)
         {
-            WeatherCell temp = pSim.BufferMap[AltLayer][cell];
+            WeatherCell temp = pSim.LiveMap[AltLayer][cell];
 
             if (AltLayer == 0) //ground layer
             {
                 temp.LWIn = temp.Emissivity * 
-                    (pSim.BufferMap[AltLayer + 1][cell].LWOut + pSim.BufferMap[AltLayer + 1][cell].LWIn);
+                    (pSim.LiveMap[AltLayer + 1][cell].LWOut + pSim.LiveMap[AltLayer + 1][cell].LWIn);
             }
             else if (AltLayer == pSim.LiveMap.Count - 2) //middle layers
             {
                 temp.LWIn = temp.Emissivity * 
-                    ((pSim.BufferMap[AltLayer - 1][cell].LWOut + pSim.BufferMap[AltLayer - 1][cell].LWTransmit) +
-                    (pSim.BufferMap[AltLayer + 1][cell].LWOut + pSim.BufferMap[AltLayer + 1][cell].LWTransmit));
+                    ((pSim.LiveMap[AltLayer - 1][cell].LWOut + pSim.LiveMap[AltLayer - 1][cell].LWTransmit) +
+                    (pSim.LiveMap[AltLayer + 1][cell].LWOut + pSim.LiveMap[AltLayer + 1][cell].LWTransmit));
             }
             else //top layer
             {
-                temp.LWIn = temp.Emissivity * (pSim.BufferMap[AltLayer - 1][cell].LWOut + pSim.BufferMap[AltLayer - 1][cell].LWTransmit);
+                temp.LWIn = temp.Emissivity * (pSim.LiveMap[AltLayer - 1][cell].LWOut + pSim.LiveMap[AltLayer - 1][cell].LWTransmit);
             }
-            pSim.BufferMap[AltLayer][cell] = temp;
+            pSim.LiveMap[AltLayer][cell] = temp;
 
         }
 
@@ -178,9 +179,9 @@ namespace KerbalWeatherSimulator
             //t = 4throot(Lout/e,layer * SBC)
             CalculateShortwaves(pSim, AltLayer, cell);
             CalculateLongwaves(pSim, AltLayer, cell);
-
-            return Mathf.Pow((float)(((pSim.BufferMap[AltLayer][cell].SWAbsorbed + pSim.BufferMap[AltLayer][cell].LWIn) / 2) /
-                (pSim.BufferMap[AltLayer][cell].Emissivity * SBC)), 0.25f);
+            //Debug.Log("SWAbs: " + pSim.BufferMap[AltLayer][cell].SWAbsorbed);
+            return Mathf.Pow((float)(((pSim.LiveMap[AltLayer][cell].SWAbsorbed + pSim.LiveMap[AltLayer][cell].LWIn) / 2.0f) /
+                (pSim.LiveMap[AltLayer][cell].Emissivity * SBC)), 0.25f);
         }
 
         internal static void InitLongwaves(PlanetSimulator pSim, Cell cell)
@@ -216,6 +217,7 @@ namespace KerbalWeatherSimulator
                         (pSim.LiveMap[index - 1][cell].LWOut + pSim.LiveMap[index - 1][cell].LWTransmit);
                     temp.LWOut = temp.Emissivity * SBC * ToTheFourth(temp.Temperature);
                 }
+                pSim.LiveMap[index][cell] = temp;
             }
         }
 

@@ -66,26 +66,27 @@ namespace GUIUtils
             GUILayout.BeginVertical();
             showBasicWindow = GUILayout.Toggle(showBasicWindow, "Basic~");
             GUILayout.EndVertical();
+            
         }
 
         void BasicDataWindow(int windowID)
         {
             if(hoverCell != null)
             {
-                GUILayout.Label("Layer: " + 0);
+                GUILayout.Label("Layer: " + 4);
                 GUILayout.Label("Cell: " + hoverCell.Value.Index);
-                GUILayout.Label("Temp: " + (pSim.LiveMap[0][hoverCell.Value].Temperature - 273.15f));
-                GUILayout.Label("Press: " + pSim.LiveMap[0][hoverCell.Value].Pressure);
-                GUILayout.Label("Dens: " + pSim.LiveMap[0][hoverCell.Value].Density);
-                GUILayout.Label("Trans: " + pSim.LiveMap[0][hoverCell.Value].Transmissivity);
-                GUILayout.Label("Emiss: " + pSim.LiveMap[0][hoverCell.Value].Emissivity);
-                GUILayout.Label("SWAbs: " + pSim.LiveMap[0][hoverCell.Value].SWAbsorbed);
-                GUILayout.Label("SWRef: " + pSim.LiveMap[0][hoverCell.Value].SWReflected);
-                GUILayout.Label("SWTrans: " + pSim.LiveMap[0][hoverCell.Value].SWTransmitted);
-                GUILayout.Label("LWIn: " + pSim.LiveMap[0][hoverCell.Value].LWIn);
-                GUILayout.Label("LWOut: " + pSim.LiveMap[0][hoverCell.Value].LWOut);
-                GUILayout.Label("LWTransmit: " + pSim.LiveMap[0][hoverCell.Value].LWTransmit);
-            
+                GUILayout.Label("Temp: " + (pSim.LiveMap[4][hoverCell.Value].Temperature - 273.15f));
+                GUILayout.Label("Press: " + pSim.LiveMap[4][hoverCell.Value].Pressure);
+                GUILayout.Label("Dens: " + pSim.LiveMap[4][hoverCell.Value].Density);
+                GUILayout.Label("Trans: " + pSim.LiveMap[4][hoverCell.Value].Transmissivity);
+                GUILayout.Label("Emiss: " + pSim.LiveMap[4][hoverCell.Value].Emissivity);
+                GUILayout.Label("SWAbs: " + pSim.LiveMap[4][hoverCell.Value].SWAbsorbed);
+                GUILayout.Label("SWRef: " + pSim.LiveMap[4][hoverCell.Value].SWReflected);
+                GUILayout.Label("SWTrans: " + pSim.LiveMap[4][hoverCell.Value].SWTransmitted);
+                GUILayout.Label("LWIn: " + pSim.LiveMap[4][hoverCell.Value].LWIn);
+                GUILayout.Label("LWOut: " + pSim.LiveMap[4][hoverCell.Value].LWOut);
+                GUILayout.Label("LWTransmit: " + pSim.LiveMap[4][hoverCell.Value].LWTransmit);
+                
             }
             GUI.DragWindow();
         }

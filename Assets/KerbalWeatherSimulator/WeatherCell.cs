@@ -79,14 +79,14 @@ namespace KerbalWeatherSimulator
             cell.WindDirection = Vector3.zero;
             //cell.WindSpeed = 0;
             cell.Pressure = 101325f;
-            cell.Transmissivity = 1;
+            cell.Transmissivity = 0;
             cell.Emissivity = 0;
             cell.SWAbsorbed = 0;
             cell.SWReflected = 0;
             cell.SWTransmitted = 0;
-            cell.LWIn = 1;
-            cell.LWOut = 1;
-            cell.LWTransmit = 1;
+            cell.LWIn = 0;
+            cell.LWOut = 0;
+            cell.LWTransmit = 0;
             //cloudColour = new Color32(1,1,1,1);
             return cell;
         }

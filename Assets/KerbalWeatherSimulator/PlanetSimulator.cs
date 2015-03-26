@@ -83,7 +83,7 @@ namespace KerbalWeatherSimulator
                     else { temp.Clouded = true; }
                     temp.Albedo = Heating.calculateAlbedo(this, AltLayer, cell);
                     temp.Pressure = GenerateRandomPressure(cell);
-                    temp.Temperature = 19.45f;
+                    temp.Temperature = 19.45f + 273.15f;
                     
                     buffer[cell] = temp;
                     buffer2[cell] = temp;
@@ -109,6 +109,7 @@ namespace KerbalWeatherSimulator
                     temp.Emissivity = Heating.calculateEmissivity(this, AltLayer, cell);
                     temp.Transmissivity = Heating.calculateTransmissivity(this, AltLayer, cell);
                     LiveMap[AltLayer][cell] = temp;
+                    BufferMap[AltLayer][cell] = temp;
                 }
             }
 
@@ -190,8 +191,8 @@ namespace KerbalWeatherSimulator
 
                     Cell cell = new Cell((uint)currentIndex);
                     WeatherCell temp = LiveMap[AltLayer][cell];
-                    
-                    BufferMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell, temp);
+                    temp = UpdateWeatherCell(AltLayer, cell, temp);
+                    LiveMap[AltLayer][cell] = temp;
                 }
                 currentIndex++;
             }
@@ -201,10 +202,11 @@ namespace KerbalWeatherSimulator
             {
                 //Don't Worry, it makes sense. Trust me.
                 //Debug.Log("Resetting Index!");
+                /*
                 List<CellMap<WeatherCell>> temp = LiveMap;
                 LiveMap = BufferMap;
                 BufferMap = temp;
-
+                */
                 currentIndex = 0;
 
                 sunDir = sunCallback();
@@ -232,11 +234,11 @@ namespace KerbalWeatherSimulator
             //wcell.Temperature = 273.15f + sunAngleCallback(sunDir,AltLayer, cell);
             wcell.Temperature = Heating.CalculateTemperature(this, AltLayer, cell);
             //wcell.Temperature = LiveMap[AltLayer][cell].Temperature + 1;
-
+            
             if (AltLayer + 1 > LiveMap.Count-1)
             {
                 wcell.Pressure = WeatherFunctions.calculatePressure(101325f, TLR, wcell.Temperature, wcell.Altitude,
-                ((wcell.Altitude + 2500) - wcell.Altitude), geeASL, MMOA);
+                    ((wcell.Altitude + 2500) - wcell.Altitude), geeASL, MMOA);
 
                 wcell.Density = WeatherFunctions.calculateDensity(1.235f, TLR, wcell.Temperature, wcell.Altitude,
                     ((wcell.Altitude + 2500) - wcell.Altitude), geeASL, MMOA);
@@ -244,7 +246,7 @@ namespace KerbalWeatherSimulator
             else
             {
                 wcell.Pressure = WeatherFunctions.calculatePressure(101325f, TLR, wcell.Temperature, wcell.Altitude,
-                ((LiveMap[AltLayer +1][cell].Altitude) - wcell.Altitude), geeASL, MMOA);
+                    ((LiveMap[AltLayer +1][cell].Altitude) - wcell.Altitude), geeASL, MMOA);
 
                 wcell.Density = WeatherFunctions.calculateDensity(1.235f, TLR, wcell.Temperature, wcell.Altitude,
                     ((LiveMap[AltLayer+1][cell].Altitude) - wcell.Altitude), geeASL, MMOA);
