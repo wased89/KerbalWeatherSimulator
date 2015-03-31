@@ -21,8 +21,8 @@ public class AxisRenderer
 
     private GameObject AxisFactory(Vector3 position, Color color, string name)
     {
-        GameObject axis = new GameObject();
-        axis.name = name;
+        GameObject axis = new GameObject(name);
+        
 
         // Create texture
         Texture2D newTex = new Texture2D(1, 1, TextureFormat.ARGB32, false);

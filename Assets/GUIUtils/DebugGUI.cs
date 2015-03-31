@@ -13,9 +13,9 @@ namespace GUIUtils
     {
         PlanetSimulator pSim;
         Cell? hoverCell;
-
+        BoundsMap bMap;
         private static Rect mainWindow = new Rect(0,0,100,50);
-        private static Rect basicDataWindow = new Rect(0,0,150,350);
+        private static Rect basicDataWindow = new Rect(0,0,150,400);
 
         int mainWindowID;
         int basicWindowID;
@@ -33,6 +33,7 @@ namespace GUIUtils
             this.pSim = pSim;
             mainWindowID = Guid.NewGuid().GetHashCode();
             basicWindowID = Guid.NewGuid().GetHashCode();
+            bMap = new BoundsMap(x => 1, pSim.level);
         }
 
         public DebugGUI(Heating heat)
@@ -43,9 +44,9 @@ namespace GUIUtils
 
         public void Update()
         {
-
+            GameObject urf = GameObject.Find("Earth");
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            hoverCell = Cell.Raycast(ray, pSim.level, new BoundsMap(x => 1, pSim.level), heightAt());
+            hoverCell = Cell.Raycast(ray, pSim.level, bMap, heightAt(), urf.transform);
 
             //if (hoverCell != null) { Debug.Log("HoverCell index: " + hoverCell.Value.Index); }
         }
@@ -69,25 +70,36 @@ namespace GUIUtils
             
         }
 
+        int layer = 0;
+        
         void BasicDataWindow(int windowID)
         {
+            
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Layer ++") && layer < pSim.LiveMap.Count - 1) { layer++; };
+            if (GUILayout.Button("Layer --") && layer > 0) { layer--; }
+            GUILayout.EndHorizontal();
+            GUILayout.Label("Layer: " + layer);
+            
             if(hoverCell != null)
             {
-                GUILayout.Label("Layer: " + 4);
+                
+               
                 GUILayout.Label("Cell: " + hoverCell.Value.Index);
-                GUILayout.Label("Temp: " + (pSim.LiveMap[4][hoverCell.Value].Temperature - 273.15f));
-                GUILayout.Label("Press: " + pSim.LiveMap[4][hoverCell.Value].Pressure);
-                GUILayout.Label("Dens: " + pSim.LiveMap[4][hoverCell.Value].Density);
-                GUILayout.Label("Trans: " + pSim.LiveMap[4][hoverCell.Value].Transmissivity);
-                GUILayout.Label("Emiss: " + pSim.LiveMap[4][hoverCell.Value].Emissivity);
-                GUILayout.Label("SWAbs: " + pSim.LiveMap[4][hoverCell.Value].SWAbsorbed);
-                GUILayout.Label("SWRef: " + pSim.LiveMap[4][hoverCell.Value].SWReflected);
-                GUILayout.Label("SWTrans: " + pSim.LiveMap[4][hoverCell.Value].SWTransmitted);
-                GUILayout.Label("LWIn: " + pSim.LiveMap[4][hoverCell.Value].LWIn);
-                GUILayout.Label("LWOut: " + pSim.LiveMap[4][hoverCell.Value].LWOut);
-                GUILayout.Label("LWTransmit: " + pSim.LiveMap[4][hoverCell.Value].LWTransmit);
+                GUILayout.Label("Temp: " + (pSim.LiveMap[layer][hoverCell.Value].Temperature - 273.15f));
+                GUILayout.Label("Press: " + pSim.LiveMap[layer][hoverCell.Value].Pressure);
+                GUILayout.Label("Dens: " + pSim.LiveMap[layer][hoverCell.Value].Density);
+                GUILayout.Label("Trans: " + pSim.LiveMap[layer][hoverCell.Value].Transmissivity);
+                GUILayout.Label("Emiss: " + pSim.LiveMap[layer][hoverCell.Value].Emissivity);
+                GUILayout.Label("SWAbs: " + pSim.LiveMap[layer][hoverCell.Value].SWAbsorbed);
+                GUILayout.Label("SWRef: " + pSim.LiveMap[layer][hoverCell.Value].SWReflected);
+                GUILayout.Label("SWTrans: " + pSim.LiveMap[layer][hoverCell.Value].SWTransmitted);
+                GUILayout.Label("LWIn: " + pSim.LiveMap[layer][hoverCell.Value].LWIn);
+                GUILayout.Label("LWOut: " + pSim.LiveMap[layer][hoverCell.Value].LWOut);
+                GUILayout.Label("LWTransmit: " + pSim.LiveMap[layer][hoverCell.Value].LWTransmit);
                 
             }
+             
             GUI.DragWindow();
         }
 

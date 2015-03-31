@@ -120,7 +120,9 @@ namespace KerbalWeatherSimulator
         {
             //Things we need: base density of level, temp, TLR, altitude, height of cell, geeASL, Molar mass of air
             //universal gas constant for air
-            if (temperature == 0) { Debug.Log("TEMP IS ZERO! INFINITY INCOMING!"); }
+            if (temperature == 0) 
+            { //Debug.Log("TEMP IS ZERO! INFINITY INCOMING!"); 
+            }
             float density;
             if (TLR == 0f) 
             {

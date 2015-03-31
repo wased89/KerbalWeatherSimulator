@@ -100,6 +100,7 @@ namespace KerbalWeatherSimulator
         {
             Debug.Log("LateInit!");
 
+            
             for (int AltLayer = 0; AltLayer < LiveMap.Count; AltLayer++ )
             {
                 foreach(Cell cell in Cell.AtLevel(level))
@@ -191,8 +192,8 @@ namespace KerbalWeatherSimulator
 
                     Cell cell = new Cell((uint)currentIndex);
                     WeatherCell temp = LiveMap[AltLayer][cell];
-                    temp = UpdateWeatherCell(AltLayer, cell, temp);
-                    LiveMap[AltLayer][cell] = temp;
+                    BufferMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell, temp);
+                    LiveMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell, temp);
                 }
                 currentIndex++;
             }
@@ -201,12 +202,12 @@ namespace KerbalWeatherSimulator
             if (currentIndex >= (int)Cell.CountAtLevel(level)-1)
             {
                 //Don't Worry, it makes sense. Trust me.
-                //Debug.Log("Resetting Index!");
-                /*
+                Debug.Log("Resetting Index!");
+                ///*
                 List<CellMap<WeatherCell>> temp = LiveMap;
                 LiveMap = BufferMap;
                 BufferMap = temp;
-                */
+                //*/
                 currentIndex = 0;
 
                 sunDir = sunCallback();
@@ -235,24 +236,26 @@ namespace KerbalWeatherSimulator
             wcell.Temperature = Heating.CalculateTemperature(this, AltLayer, cell);
             //wcell.Temperature = LiveMap[AltLayer][cell].Temperature + 1;
             
+            //For pressure and density we need the base pressures for the layer... we need to get those...
+            //the static of 101325 is going to fuck with calcs tbh.
             if (AltLayer + 1 > LiveMap.Count-1)
             {
-                wcell.Pressure = WeatherFunctions.calculatePressure(101325f, TLR, wcell.Temperature, wcell.Altitude,
-                    ((wcell.Altitude + 2500) - wcell.Altitude), geeASL, MMOA);
+                //wcell.Pressure = WeatherFunctions.calculatePressure(101325f, TLR, wcell.Temperature, wcell.Altitude,
+                    //((wcell.Altitude + 2500) - wcell.Altitude), geeASL, MMOA);
 
-                wcell.Density = WeatherFunctions.calculateDensity(1.235f, TLR, wcell.Temperature, wcell.Altitude,
-                    ((wcell.Altitude + 2500) - wcell.Altitude), geeASL, MMOA);
+                //wcell.Density = WeatherFunctions.calculateDensity(1.235f, TLR, wcell.Temperature, wcell.Altitude,
+                    //((wcell.Altitude + 2500) - wcell.Altitude), geeASL, MMOA);
             }
             else
             {
-                wcell.Pressure = WeatherFunctions.calculatePressure(101325f, TLR, wcell.Temperature, wcell.Altitude,
-                    ((LiveMap[AltLayer +1][cell].Altitude) - wcell.Altitude), geeASL, MMOA);
+                //wcell.Pressure = WeatherFunctions.calculatePressure(101325f, TLR, wcell.Temperature, wcell.Altitude,
+                    //((LiveMap[AltLayer +1][cell].Altitude) - wcell.Altitude), geeASL, MMOA);
 
-                wcell.Density = WeatherFunctions.calculateDensity(1.235f, TLR, wcell.Temperature, wcell.Altitude,
-                    ((LiveMap[AltLayer+1][cell].Altitude) - wcell.Altitude), geeASL, MMOA);
+                //wcell.Density = WeatherFunctions.calculateDensity(1.235f, TLR, wcell.Temperature, wcell.Altitude,
+                    //((LiveMap[AltLayer+1][cell].Altitude) - wcell.Altitude), geeASL, MMOA);
             }
             //wcell.Pressure = GenerateRandomPressure(cell);
-            //wcell.Pressure = WeatherFunctions.newCalculatePressure(this, AltLayer, cell);
+            wcell.Pressure = WeatherFunctions.newCalculatePressure(this, AltLayer, cell);
             
             wcell.WindDirection = WeatherFunctions.CalculateWindVector(this, AltLayer, cell);
 
