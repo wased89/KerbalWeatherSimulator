@@ -55,7 +55,7 @@ namespace KerbalWeatherSimulator
                     temp.SWAbsorbed = pSim.LiveMap[index + 1][cell].SWTransmitted *
                         (1 - temp.Albedo - temp.Transmissivity);
                 }
-                pSim.BufferMap[index][cell] = temp;
+                pSim.LiveMap[index][cell] = temp;
             }
         }
         
@@ -106,6 +106,7 @@ namespace KerbalWeatherSimulator
                 
                 //Debug.Log("Layer: "+ AltLayer + ", " + pSim.BufferMap[pSim.LiveMap.Count-1][cell].SWTransmitted); //gives 0
             }
+            //pSim.LiveMap[AltLayer][cell] = temp;
             pSim.BufferMap[AltLayer][cell] = temp;
         }
 
@@ -185,6 +186,8 @@ namespace KerbalWeatherSimulator
             CalculateShortwaves(pSim, AltLayer, cell);
             CalculateLongwaves(pSim, AltLayer, cell);
             //Debug.Log("SWAbs: " + pSim.BufferMap[AltLayer][cell].SWAbsorbed);
+            //return Mathf.Pow((float)(((pSim.BufferMap[AltLayer][cell].LWOut) /
+                //(pSim.LiveMap[AltLayer][cell].Emissivity * SBC))), 0.25f);
             return Mathf.Pow((float)(((pSim.BufferMap[AltLayer][cell].SWAbsorbed + pSim.BufferMap[AltLayer][cell].LWIn) / 2.0f) /
                 (pSim.LiveMap[AltLayer][cell].Emissivity * SBC)), 0.25f);
         }
@@ -236,7 +239,7 @@ namespace KerbalWeatherSimulator
             {
                 return 0.96f;
             }
-            else if(WeatherFunctions.getLatitude(cell) > 60 && pSim.LiveMap[0][cell].isOcean == false)
+            else if (WeatherFunctions.getLatitude(cell) > 60 || WeatherFunctions.getLatitude(cell) < -60 && pSim.LiveMap[0][cell].isOcean == false)
             {
                 return 0.97f;
 

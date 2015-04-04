@@ -13,9 +13,10 @@ namespace GUIUtils
     {
         PlanetSimulator pSim;
         Cell? hoverCell;
+        Cell? lastKnownCell;
         BoundsMap bMap;
         private static Rect mainWindow = new Rect(0,0,100,50);
-        private static Rect basicDataWindow = new Rect(0,0,150,400);
+        private static Rect basicDataWindow = new Rect(0,0,150,425);
 
         int mainWindowID;
         int basicWindowID;
@@ -83,21 +84,26 @@ namespace GUIUtils
             
             if(hoverCell != null)
             {
+
+                lastKnownCell = hoverCell.Value;
                 
-               
-                GUILayout.Label("Cell: " + hoverCell.Value.Index);
-                GUILayout.Label("Temp: " + (pSim.LiveMap[layer][hoverCell.Value].Temperature - 273.15f));
-                GUILayout.Label("Press: " + pSim.LiveMap[layer][hoverCell.Value].Pressure);
-                GUILayout.Label("Dens: " + pSim.LiveMap[layer][hoverCell.Value].Density);
-                GUILayout.Label("Trans: " + pSim.LiveMap[layer][hoverCell.Value].Transmissivity);
-                GUILayout.Label("Emiss: " + pSim.LiveMap[layer][hoverCell.Value].Emissivity);
-                GUILayout.Label("SWAbs: " + pSim.LiveMap[layer][hoverCell.Value].SWAbsorbed);
-                GUILayout.Label("SWRef: " + pSim.LiveMap[layer][hoverCell.Value].SWReflected);
-                GUILayout.Label("SWTrans: " + pSim.LiveMap[layer][hoverCell.Value].SWTransmitted);
-                GUILayout.Label("LWIn: " + pSim.LiveMap[layer][hoverCell.Value].LWIn);
-                GUILayout.Label("LWOut: " + pSim.LiveMap[layer][hoverCell.Value].LWOut);
-                GUILayout.Label("LWTransmit: " + pSim.LiveMap[layer][hoverCell.Value].LWTransmit);
                 
+            }
+            if(lastKnownCell != null)
+            {
+                GUILayout.Label("Cell: " + lastKnownCell.Value.Index);
+                GUILayout.Label("Temp: " + (pSim.LiveMap[layer][lastKnownCell.Value].Temperature - 273.15f));
+                GUILayout.Label("Press: " + pSim.LiveMap[layer][lastKnownCell.Value].Pressure);
+                GUILayout.Label("Dens: " + pSim.LiveMap[layer][lastKnownCell.Value].Density);
+                GUILayout.Label("Trans: " + pSim.LiveMap[layer][lastKnownCell.Value].Transmissivity);
+                GUILayout.Label("Emiss: " + pSim.LiveMap[layer][lastKnownCell.Value].Emissivity);
+                GUILayout.Label("SWAbs: " + pSim.LiveMap[layer][lastKnownCell.Value].SWAbsorbed);
+                GUILayout.Label("SWRef: " + pSim.LiveMap[layer][lastKnownCell.Value].SWReflected);
+                GUILayout.Label("SWTrans: " + pSim.LiveMap[layer][lastKnownCell.Value].SWTransmitted);
+                GUILayout.Label("LWIn: " + pSim.LiveMap[layer][lastKnownCell.Value].LWIn);
+                GUILayout.Label("LWOut: " + pSim.LiveMap[layer][lastKnownCell.Value].LWOut);
+                GUILayout.Label("LWTransmit: " + pSim.LiveMap[layer][lastKnownCell.Value].LWTransmit);
+                GUILayout.Label("WindDir: " + pSim.LiveMap[layer][lastKnownCell.Value].WindDirection);
             }
              
             GUI.DragWindow();

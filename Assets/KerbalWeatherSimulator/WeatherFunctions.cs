@@ -75,6 +75,21 @@ namespace KerbalWeatherSimulator
                 windVector = windVector + corAcc;
                 resultant += windVector;
             }
+            //Start work on upper cell and lower cell
+            if(AltLayer+1 <= pSim.LiveMap.Count -1)
+            {
+                
+                float deltaPressure1 = pSim.LiveMap[AltLayer][cell].Pressure - pSim.LiveMap[AltLayer + 1][cell].Pressure;
+                Vector3 cellVector = cell.Position - cell.Position;
+
+                float neighbourDistance = cellVector.magnitude;
+            }
+            if(AltLayer -1 >= 0)
+            {
+                float deltaPressure1 = pSim.LiveMap[AltLayer][cell].Pressure - pSim.LiveMap[AltLayer - 1][cell].Pressure;
+            }
+            
+
             
             return resultant;
         }
@@ -88,13 +103,32 @@ namespace KerbalWeatherSimulator
             //Possible causes of error: temperature is 0 and TLR is 0, resulting in NaN
             //However temperature is in Kelvins, so that shouldn't ever happen
             float pressure;
+            float bPressure = basePressure;
+            float temp = temperature;
+            if(temp == 0)
+            {
+                temp = 1;
+            }
+            else if(float.IsNaN(temp))
+            {
+                temp = 1;
+            }
+            if(float.IsNaN(bPressure))
+            {
+                bPressure = 101325f;
+            }
+            else if(bPressure == 0)
+            {
+                bPressure = 10132f;
+            }
+
             if(TLR == 0)
             {
-                pressure = basePressure * Mathf.Exp(((-geeASL * MMOA * (AOC - HOL) )/ (8.31432f * temperature)));
+                pressure = bPressure * Mathf.Exp(((-geeASL * MMOA * (AOC - HOL) )/ (8.31432f * temp)));
             }
             else
             {
-                pressure = basePressure * Mathf.Pow((temperature / ((temperature + (TLR * 1000)) * (AOC + HOL))), ((geeASL * MMOA) / (8.31432f * (TLR * 1000))));
+                pressure = bPressure * Mathf.Pow((temp / ((temp + (TLR * 1000)) * (AOC + HOL))), ((geeASL * MMOA) / (8.31432f * (TLR * 1000))));
             }
             
             
@@ -106,12 +140,19 @@ namespace KerbalWeatherSimulator
         {
             //p1 * t2 = p2 * t1;
             //p2 = (p1 * t2)/t1;
-            if (pSim.LiveMap[AltLayer][cell].Temperature == 0)
+            float temp1 = pSim.LiveMap[AltLayer][cell].Temperature;
+            float temp2 = pSim.BufferMap[AltLayer][cell].Temperature;
+            float press1 = pSim.LiveMap[AltLayer][cell].Pressure;
+            if (temp1 == 0)
             {
+                temp1 = 1f;
                 //Debug.Log("Temp is zero!");
             }
-            float pressure = (pSim.LiveMap[AltLayer][cell].Pressure * pSim.BufferMap[AltLayer][cell].Temperature)
-                / pSim.LiveMap[AltLayer][cell].Temperature;
+            if(temp2 == 0)
+            {
+                temp2 = 1f;
+            }
+            float pressure = (press1 * temp2) / temp1;
             return pressure;
         }
 
