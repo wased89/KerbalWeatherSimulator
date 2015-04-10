@@ -196,10 +196,10 @@ namespace KerbalWeatherSimulator
                     //BufferMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell, temp);
                     BufferMap[AltLayer][cell] = temp;
                     
-                    //BufferMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell,LiveMap[AltLayer][cell]);
+                    //BufferMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell, temp);
                     //LiveMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell, BufferMap[AltLayer][cell]);
-                    temp = BufferMap[AltLayer][cell];
-                    LiveMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell, temp);
+                    //temp = BufferMap[AltLayer][cell];
+                    //LiveMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell, temp);
                     //LiveMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell, BufferMap[AltLayer][cell]);
                     //LiveMap[AltLayer][cell] = temp;
                     //LiveMap[AltLayer][cell] = BufferMap[AltLayer][cell];
@@ -207,12 +207,24 @@ namespace KerbalWeatherSimulator
                 currentIndex++;
             }
 
+
+
             
             if (currentIndex >= (int)Cell.CountAtLevel(level)-1)
             {
                 //Don't Worry, it makes sense. Trust me.
                 Debug.Log("Resetting Index!");
                 /*
+                for (int AltLayer = 0; AltLayer < LiveMap.Count - 1; AltLayer++ )
+                {
+                    foreach (Cell cell in Cell.AtLevel(level))
+                    {
+                        LiveMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell, BufferMap[AltLayer][cell]);
+                    }
+                }
+                //*/
+                
+                ///*
                 List<CellMap<WeatherCell>> temp = LiveMap;
                 LiveMap = BufferMap;
                 BufferMap = temp;

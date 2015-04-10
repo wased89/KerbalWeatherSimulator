@@ -7,6 +7,21 @@ using GeodesicGrid;
 
 namespace KerbalWeatherSimulator
 {
+    //run the radiative model, then run convection after it
+    //heat transferred = h*A*(deltaT)
+    //h = heat transfer coefficient
+    //A = contact area
+    //deltaT = temperature delta
+    //this is a rolling update
+    //calc h each time
+    //use newton's law of cooling:
+    //dQ/dt = h*a*(T(t) - Tenv) = h*A*Tgradient(t)
+
+    //step1: calc heat transfer coefficient
+    //step 2: calc temperature gradient
+    //step 3: 
+
+
     public class Heating
     {
         private const float SBC = 0.000000056704f;
@@ -20,6 +35,7 @@ namespace KerbalWeatherSimulator
             //Debug.Log("Init shortwaves");
             for (int index = pSim.LiveMap.Count - 1; index > 0; index--)
             {
+                
                 WeatherCell temp = pSim.LiveMap[index][cell];
                 if (index == pSim.LiveMap.Count - 1) //Is it top layer?
                 {

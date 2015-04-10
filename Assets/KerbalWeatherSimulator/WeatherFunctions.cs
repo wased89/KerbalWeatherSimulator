@@ -80,16 +80,59 @@ namespace KerbalWeatherSimulator
             {
                 
                 float deltaPressure1 = pSim.LiveMap[AltLayer][cell].Pressure - pSim.LiveMap[AltLayer + 1][cell].Pressure;
-                Vector3 cellVector = cell.Position - cell.Position;
+                Vector3 cellVector = cell.Position - (cell.Position * 1.25f);
 
                 float neighbourDistance = cellVector.magnitude;
+                cellVector.Normalize();
+                if (deltaPressure1 == 0f)
+                {
+                    
+                }
+                else
+                {
+                    float acc = (-1 / pSim.LiveMap[AltLayer][cell].Density) * (deltaPressure1 / neighbourDistance);
+
+                    //v = a * sqrt(2d/a)
+                    float windSpeed = acc * Mathf.Sqrt((2 * neighbourDistance) / Mathf.Abs(acc));
+
+                    //divide by 2 because opposite shit. Trust me, it is.
+                    Vector3 windVector = new Vector3(cellVector.x * windSpeed / 2f, cellVector.y * windSpeed / 2f, cellVector.z * windSpeed / 2f);
+
+                    //Apply Coriolis to windVector
+                    Vector3 corAcc = 2 * Vector3.Cross(windVector, pSim.angularVelocity + new Vector3(0f, Mathf.Cos(WeatherFunctions.getLatitude(cell)), Mathf.Sin(WeatherFunctions.getLatitude(cell))));
+
+                    windVector = windVector + corAcc;
+                    resultant += windVector;
+                }
             }
             if(AltLayer -1 >= 0)
             {
                 float deltaPressure1 = pSim.LiveMap[AltLayer][cell].Pressure - pSim.LiveMap[AltLayer - 1][cell].Pressure;
-            }
-            
+                Vector3 cellVector = cell.Position - (cell.Position * -0.75f);
 
+                float neighbourDistance = cellVector.magnitude;
+                cellVector.Normalize();
+                if (deltaPressure1 == 0f)
+                {
+                    
+                }
+                else
+                {
+                    float acc = (-1 / pSim.LiveMap[AltLayer][cell].Density) * (deltaPressure1 / neighbourDistance);
+
+                    //v = a * sqrt(2d/a)
+                    float windSpeed = acc * Mathf.Sqrt((2 * neighbourDistance) / Mathf.Abs(acc));
+
+                    //divide by 2 because opposite shit. Trust me, it is.
+                    Vector3 windVector = new Vector3(cellVector.x * windSpeed / 2f, cellVector.y * windSpeed / 2f, cellVector.z * windSpeed / 2f);
+
+                    //Apply Coriolis to windVector
+                    Vector3 corAcc = 2 * Vector3.Cross(windVector, pSim.angularVelocity + new Vector3(0f, Mathf.Cos(WeatherFunctions.getLatitude(cell)), Mathf.Sin(WeatherFunctions.getLatitude(cell))));
+
+                    windVector = windVector + corAcc;
+                    resultant += windVector;
+                }
+            }
             
             return resultant;
         }
