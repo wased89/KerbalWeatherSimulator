@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using GeodesicGrid;
-using KerbalWeatherSimulator;
 
 namespace KerbalWeatherSimulator
 {
@@ -18,28 +17,9 @@ namespace KerbalWeatherSimulator
     //use newton's law of cooling:
     //dQ/dt = h*a*(T(t) - Tenv) = h*A*Tgradient(t)
 
-    //possible equation for h:
-    //h = (Nu)(k)/(D) where Nu comes from the Dittus-Boelter equation, k is the thermal conductivity, D is distance
-    //Nu = 0.023 Re^0.8 Pr^0.4 where the exp of Pr is 0.3 if the liquid is cooling, 0.4 if heating.
-    //Re is the Reynolds number and Pr is the Prandtl number.
-    //Re = DVp/u where u is the viscosity of the fluid, D is distance, and V is the relative velocity, p is density
-    //Pr = v/alpha = u Cp / k where Cp is the heat capacity of the fluid in kj/kg-K
-
-    //step1: calc temperature gradient
-    //step 2: calculate Reynolds number
-    //step 3: calculate Prandtl number
-    //step 4: calcualte Nusselt number
-    //step 5: calculate heat transfer coefficient
-    //step 6: calculate final result
-    //step 7: do the shit needed to add it to the temp of the cell
-
-
-    //What if doing the cellVector and the windVector for both cells in question and comparing them?
-    //h * A * Tgrad where Tgrad is measured over deltaT, deltaT *should* be the time since last updating the cell.
-    //Q = m *c * deltaT, where m = mass of air, c = heat capacity, deltaT = change in temp
-    // h * A * Tgrad = m * c * deltaT, solve for deltaT
-    //deltaT = ((h * A * Tgrad)/m)/c
-    //add deltaT to final temp
+    //step1: calc heat transfer coefficient
+    //step 2: calc temperature gradient
+    //step 3: 
 
 
     public class Heating
@@ -47,9 +27,6 @@ namespace KerbalWeatherSimulator
         private const float SBC = 0.000000056704f;
         private const double KSun = 3.17488630646816122100221E24;
         private const double LSun = 6.8930893418241730829829167104E24;
-        internal static double atmoViscAtRef0C = 1.73620646931577869E-5;
-        internal static double atmoHeatCapacity = 1.01; //1.01kj/kg-K
-        internal static double atmoThermalConductivity = 0.024; //W/m-K
 
 
 
@@ -65,7 +42,7 @@ namespace KerbalWeatherSimulator
                     float SunriseFactor = (float)(Mathf.Cos(WeatherFunctions.getLatitude(cell) * Mathf.Deg2Rad) +
                     Mathf.Cos(getSunlightAngle(pSim, index, cell) * Mathf.Deg2Rad)) / 2f;
                     //check for sunlight
-                    if (WeatherFunctions.isSunlight(pSim, index, cell))
+                    if (isSunlight(pSim, index, cell))
                     {
                         float bodyKSun = pSim.bodyKSun * SunriseFactor;
                         temp.SWReflected = bodyKSun * temp.Albedo;
@@ -107,7 +84,7 @@ namespace KerbalWeatherSimulator
                     Mathf.Cos(getSunlightAngle(pSim, AltLayer, cell) * Mathf.Deg2Rad)) / 2f;
                 //Debug.Log("Sunrise Factor: " + SunriseFactor); //checks out
                 //Do check to see if top layer is in sunlight
-                if(WeatherFunctions.isSunlight(pSim, AltLayer, cell))
+                if(isSunlight(pSim, AltLayer, cell))
                 {
                     float bodyKSun = pSim.bodyKSun * SunriseFactor;
                     //Debug.Log("bodyKSun: " + bodyKSun);
@@ -227,24 +204,15 @@ namespace KerbalWeatherSimulator
             //Debug.Log("SWAbs: " + pSim.BufferMap[AltLayer][cell].SWAbsorbed);
             //return Mathf.Pow((float)(((pSim.BufferMap[AltLayer][cell].LWOut) /
                 //(pSim.LiveMap[AltLayer][cell].Emissivity * SBC))), 0.25f);
-            if(pSim.timesLeft > 0)
-            {
-                return (Mathf.Pow((float)(((pSim.BufferMap[AltLayer][cell].SWAbsorbed + pSim.BufferMap[AltLayer][cell].LWIn) / 2.0f) /
-                (pSim.LiveMap[AltLayer][cell].Emissivity * SBC)), 0.25f));
-            }
-            else
-            {
-                return (Mathf.Pow((float)(((pSim.BufferMap[AltLayer][cell].SWAbsorbed + pSim.BufferMap[AltLayer][cell].LWIn) / 2.0f) /
-                (pSim.LiveMap[AltLayer][cell].Emissivity * SBC)), 0.25f))+calculateFinalTempDelta(pSim, AltLayer, cell);
-            }
-            
+            return Mathf.Pow((float)(((pSim.BufferMap[AltLayer][cell].SWAbsorbed + pSim.BufferMap[AltLayer][cell].LWIn) / 2.0f) /
+                (pSim.LiveMap[AltLayer][cell].Emissivity * SBC)), 0.25f);
         }
 
         internal static void InitLongwaves(PlanetSimulator pSim, Cell cell)
         {
             for (int index = 0; index <= pSim.LiveMap.Count - 1; index++)
             {
-                WeatherCell temp = pSim.BufferMap[index][cell];
+                WeatherCell temp = pSim.LiveMap[index][cell];
                 if(index == 0) //is surface layer
                 {
                     temp.LWOut = temp.Emissivity * SBC * ToTheFourth(temp.Temperature);
@@ -253,16 +221,16 @@ namespace KerbalWeatherSimulator
                 }
                 else if(index == 1) //layer above surface
                 {
-                    temp.LWIn = pSim.BufferMap[index - 1][cell].LWOut * temp.Emissivity;
-                    temp.LWTransmit = pSim.BufferMap[index -1][cell].LWOut * (1 - temp.Emissivity);
+                    temp.LWIn = pSim.LiveMap[index - 1][cell].LWOut * temp.Emissivity;
+                    temp.LWTransmit = pSim.LiveMap[index -1][cell].LWOut * (1 - temp.Emissivity);
                     temp.LWOut = temp.Emissivity * SBC * ToTheFourth(temp.Temperature);
                 }
                 else if(index < pSim.LiveMap.Count - 2) //middle layers
                 {
                     temp.LWIn = temp.Emissivity * 
-                        (pSim.BufferMap[index - 1][cell].LWOut + pSim.BufferMap[index - 1][cell].LWTransmit);
+                        (pSim.LiveMap[index - 1][cell].LWOut + pSim.LiveMap[index - 1][cell].LWTransmit);
                     temp.LWTransmit = (1 - temp.Emissivity) * 
-                        (pSim.BufferMap[index - 1][cell].LWOut + pSim.LiveMap[index -1][cell].LWTransmit);
+                        (pSim.LiveMap[index - 1][cell].LWOut + pSim.LiveMap[index -1][cell].LWTransmit);
                     temp.LWOut = temp.Emissivity * SBC * ToTheFourth(temp.Temperature);
                 }
                 else//top layer
@@ -335,130 +303,19 @@ namespace KerbalWeatherSimulator
             float opticalDepth = 0.02f; //Original: 0.2f
             return opticalDepth;
         }
-
-        internal static float calculateFinalTempDelta(PlanetSimulator pSim, int AltLayer, Cell cell)
+        public static bool isSunlight(PlanetSimulator pSim, int AltLayer, Cell cell)
         {
-            //deltaT = ((h * A * Tgrad)/m)/c
-            float deltaT;
-            float HF = calculateNetHeatFlow(pSim, AltLayer, cell);
-            float m = 100f;
-            float c = (float)atmoHeatCapacity;
-            deltaT = (HF / m) / c;
-            return deltaT;
-            
-        }
-
-        internal static float calculateNetHeatFlow(PlanetSimulator pSim, int AltLayer, Cell cell)
-        {
-            //HF = h * A * Tgrad
-            float HF = 0;
-            foreach(Cell neighbor in cell.GetNeighbors(pSim.level))
+            if(getSunlightAngle(pSim, AltLayer, cell) > 90)
             {
-                float Tgrad = calculateTemperatureGradient(pSim, AltLayer, AltLayer, cell, neighbor);
-                float h = calculateHeatTransferCoefficient(pSim, AltLayer, cell, neighbor);
-                float A = pSim.LiveMap[AltLayer][cell].Height * 2500;
-                
-                HF += h * A * Tgrad;
-            }
-            
-            return HF; //returns W/s
-        }
-
-        internal static float calculateTemperatureGradient(PlanetSimulator pSim, int AltLayerA, int AltLayerB, Cell cellA, Cell cellB)
-        {
-            float Tgrad = pSim.LiveMap[AltLayerA][cellA].Temperature - pSim.LiveMap[AltLayerB][cellB].Temperature;
-            
-            
-            
-            return Tgrad;
-        }
-        internal static float calculateHeatTransferCoefficient(PlanetSimulator pSim, int AltLayer, Cell cellA,Cell cellB)
-        {
-            //h = (Nu)(k)/D
-            //Nu = Nusselt number, k = thermal conductivity, D = characteristic length parameter, such as diameter for flow through a pipe.
-            float tg = calculateTemperatureGradient(pSim, AltLayer, AltLayer, cellA, cellB);
-            float cellHeight = pSim.LiveMap[AltLayer][cellA].Height;
-            float pointWidth = 2500f; //the width of the intersecting area between two cells
-            float D = Mathf.Sqrt((pointWidth * cellHeight));
-            float Nu;
-            float h;
-            float k = (float)Heating.atmoThermalConductivity;
-            if (tg > 0) //is cooling
-            {
-                Nu = calculateNusseltNumber(pSim, AltLayer, cellA,cellB, true);
-                h = (Nu * k) / D;
-
+                return false;
             }
             else
             {
-                Nu = calculateNusseltNumber(pSim, AltLayer, cellA, cellB, false);
-                h = (Nu * k) / D;
+                return true;
             }
             
+        }
 
-            return h;
-        }
-        internal static float calculateNusseltNumber(PlanetSimulator pSim, int AltLayer, Cell cellA, Cell cellB, bool isCooling)
-        {
-            float Re = calculateReynoldsNumber(pSim, AltLayer, cellA, cellB);
-            float Pr = calculatePrandtlNumber(pSim, AltLayer, cellA);
-            float Nu;
-            if (isCooling)
-            {
-                Nu = 0.023f * Mathf.Pow(Re, 0.8f) * Mathf.Pow(Pr, 0.3f);
-            }
-            else
-            {
-                Nu = 0.023f * Mathf.Pow(Re, 0.8f) * Mathf.Pow(Pr, 0.4f);
-            }
-            
-            return Nu;
-        }
-        internal static float calculateReynoldsNumber(PlanetSimulator pSim, int AltLayer, Cell cellA, Cell cellB)
-        {
-            //Re = DVp/u
-            //D = Distance parameter thing, V = velocity, p = density, u = viscosity
-            float D = Mathf.Sqrt(pSim.LiveMap[AltLayer][cellA].Height * 2500);
-            Vector3 cellVector = cellA.Position - cellB.Position;
-            float v = pSim.LiveMap[AltLayer][cellB].WindDirection.magnitude;
-            
-            float V =  v * Mathf.Cos((Vector3.Dot(cellVector, pSim.LiveMap[AltLayer][cellB].WindDirection)));
-            if(float.IsNaN(V) && cellA.Index == 10)
-            {
-                Debug.Log("Velocity is NaN");
-            }
-            float p = pSim.LiveMap[AltLayer][cellA].Density;
-            float u = calculateViscosity(pSim, AltLayer, cellA);
-            float Re = (D * V * p) / u;
-            
-           
-            return Re;
-        }
-        internal static float calculatePrandtlNumber(PlanetSimulator pSim, int AltLayer, Cell cell)
-        {
-            //PN = v*Cp/k
-            //v is viscosity, Cp is specific heat capacity, k is thermal conductivity
-            float v = calculateViscosity(pSim, AltLayer, cell);
-            float Cp = (float)Heating.atmoHeatCapacity;
-            float k = (float)Heating.atmoThermalConductivity;
-            float PN = (v * Cp) / k;
-            
-            return PN;
-        }
-        internal static float calculateViscosity(PlanetSimulator pSim, int AltLayer, Cell cell)
-        {
-            //u/u0 = (T/T0)^0.7
-            //u = u0 * ((T/273.15)^0.7)
-            float T = pSim.LiveMap[AltLayer][cell].Temperature;
-            
-            float u = (float)Heating.atmoViscAtRef0C * (Mathf.Pow((T / 273.15f), 0.7f));
-            if(cell.Index == 10)
-            {
-                //Debug.Log("viscosity is: " + u);
-            }
-            
-            return u;
-        }
         public static float getSunlightAngle(PlanetSimulator pSim, int AltLayer,  Cell cell)
         {
             Vector3 sunPos = pSim.sunDir;

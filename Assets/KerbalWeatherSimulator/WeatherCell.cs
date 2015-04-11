@@ -52,7 +52,6 @@ namespace KerbalWeatherSimulator
         public float Humidity;
         public float Temperature;
         public float Altitude;
-        public float Height;
         public float Pressure;
         public float Density;
         //public float WindSpeed;
@@ -74,7 +73,6 @@ namespace KerbalWeatherSimulator
             //cell.isCellHigherPressure = false;
             cell.Albedo = 0.35f;
             cell.Altitude = 0;
-            cell.Height = 2500f;
             cell.Density = 1.29f;
             cell.Humidity = 0;
             cell.Temperature = 1;
