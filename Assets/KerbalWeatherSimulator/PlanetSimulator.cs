@@ -39,6 +39,8 @@ namespace KerbalWeatherSimulator
         private int CellsToUpdate = 250;
         private int currentIndex;
 
+        public int timesLeft = 3;
+
 
         public int level
         {
@@ -192,15 +194,15 @@ namespace KerbalWeatherSimulator
 
                     Cell cell = new Cell((uint)currentIndex);
                     WeatherCell temp = LiveMap[AltLayer][cell];
-                    temp = UpdateWeatherCell(AltLayer, cell, BufferMap[AltLayer][cell]);
-                    //BufferMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell, temp);
-                    BufferMap[AltLayer][cell] = temp;
+                    //temp = UpdateWeatherCell(AltLayer, cell, BufferMap[AltLayer][cell]);
+                   //BufferMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell, temp);
+                    //BufferMap[AltLayer][cell] = temp;
                     
                     //BufferMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell, temp);
                     //LiveMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell, BufferMap[AltLayer][cell]);
                     //temp = BufferMap[AltLayer][cell];
                     //LiveMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell, temp);
-                    //LiveMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell, BufferMap[AltLayer][cell]);
+                    LiveMap[AltLayer][cell] = UpdateWeatherCell(AltLayer, cell, BufferMap[AltLayer][cell]);
                     //LiveMap[AltLayer][cell] = temp;
                     //LiveMap[AltLayer][cell] = BufferMap[AltLayer][cell];
                 }
@@ -214,6 +216,11 @@ namespace KerbalWeatherSimulator
             {
                 //Don't Worry, it makes sense. Trust me.
                 Debug.Log("Resetting Index!");
+                if(timesLeft >0)
+                {
+                    timesLeft--;
+                }
+                
                 /*
                 for (int AltLayer = 0; AltLayer < LiveMap.Count - 1; AltLayer++ )
                 {
@@ -224,7 +231,7 @@ namespace KerbalWeatherSimulator
                 }
                 //*/
                 
-                ///*
+               /*
                 List<CellMap<WeatherCell>> temp = LiveMap;
                 LiveMap = BufferMap;
                 BufferMap = temp;
@@ -282,6 +289,7 @@ namespace KerbalWeatherSimulator
             }
             //wcell.Pressure = GenerateRandomPressure(cell);
             wcell.Pressure = WeatherFunctions.newCalculatePressure(this, AltLayer, cell);
+            if (wcell.Pressure == 0) { wcell.Pressure = 101325f; }
             
             wcell.WindDirection = WeatherFunctions.CalculateWindVector(this, AltLayer, cell);
 

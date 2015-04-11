@@ -220,6 +220,7 @@ namespace KerbalWeatherSimulator
             return density;
         }
 
+
         public static float getHumidity(Cell cell)
         {
             throw new NotImplementedException();
@@ -232,7 +233,18 @@ namespace KerbalWeatherSimulator
         {
             return 0f;
         }
+        public static bool isSunlight(PlanetSimulator pSim, int AltLayer, Cell cell)
+        {
+            if (Heating.getSunlightAngle(pSim, AltLayer, cell) > 90)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
 
+        }
 
     }
 }
