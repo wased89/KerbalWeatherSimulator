@@ -59,7 +59,7 @@ namespace KerbalWeatherSimulator
             for (int index = pSim.LiveMap.Count - 1; index > 0; index--)
             {
                 
-                WeatherCell temp = pSim.LiveMap[index][cell];
+                WeatherCell temp = pSim.BufferMap[index][cell];
                 if (index == pSim.LiveMap.Count - 1) //Is it top layer?
                 {
                     float SunriseFactor = (float)(Mathf.Cos(WeatherFunctions.getLatitude(cell) * Mathf.Deg2Rad) +
@@ -82,138 +82,149 @@ namespace KerbalWeatherSimulator
                 }
                 else if (index == 0) //is it bottom layer? No transmit
                 {
-                    temp.SWReflected = pSim.LiveMap[index + 1][cell].SWTransmitted * temp.Albedo;
+                    temp.SWReflected = pSim.BufferMap[index + 1][cell].SWTransmitted * temp.Albedo;
                     temp.SWTransmitted = 0f;
-                    temp.SWAbsorbed = pSim.LiveMap[index + 1][cell].SWTransmitted *
+                    temp.SWAbsorbed = pSim.BufferMap[index + 1][cell].SWTransmitted *
                         (1 - temp.Albedo - temp.Transmissivity);
                 }
                 else
                 {
-                    temp.SWReflected = pSim.LiveMap[index + 1][cell].SWTransmitted * temp.Albedo;
-                    temp.SWTransmitted = pSim.LiveMap[index + 1][cell].SWTransmitted * temp.Transmissivity;
-                    temp.SWAbsorbed = pSim.LiveMap[index + 1][cell].SWTransmitted *
+                    temp.SWReflected = pSim.BufferMap[index + 1][cell].SWTransmitted * temp.Albedo;
+                    temp.SWTransmitted = pSim.BufferMap[index + 1][cell].SWTransmitted * temp.Transmissivity;
+                    temp.SWAbsorbed = pSim.BufferMap[index + 1][cell].SWTransmitted *
                         (1 - temp.Albedo - temp.Transmissivity);
                 }
-                pSim.LiveMap[index][cell] = temp;
+                pSim.BufferMap[index][cell] = temp;
             }
         }
         
-        public static void CalculateShortwaves(PlanetSimulator pSim, int AltLayer, Cell cell)
+        public static void CalculateShortwaves(PlanetSimulator pSim, Cell cell, WeatherCell[] wCellColumn)
         {
-            WeatherCell temp = pSim.BufferMap[AltLayer][cell];
-            if(AltLayer == pSim.BufferMap.Count -1) //Is it top layer?
+
+            for (int AltLayer = wCellColumn.Length - 1; AltLayer >= 0; AltLayer--)
             {
-                float SunriseFactor = (float)(Mathf.Cos(WeatherFunctions.getLatitude(cell) * Mathf.Deg2Rad) + 
-                    Mathf.Cos(getSunlightAngle(pSim, AltLayer, cell) * Mathf.Deg2Rad)) / 2f;
-                //Debug.Log("Sunrise Factor: " + SunriseFactor); //checks out
-                //Do check to see if top layer is in sunlight
-                if(WeatherFunctions.isSunlight(pSim, AltLayer, cell))
+                WeatherCell temp = wCellColumn[AltLayer];
+                if (AltLayer == pSim.BufferMap.Count - 1) //Is it top layer?
                 {
-                    float bodyKSun = pSim.bodyKSun * SunriseFactor;
-                    //Debug.Log("bodyKSun: " + bodyKSun);
-                    temp.SWReflected = bodyKSun * temp.Albedo;
-                    temp.SWTransmitted = bodyKSun * temp.Transmissivity;
-                    //Debug.Log(temp.SWTransmitted); //top layer gives real values
-                    temp.SWAbsorbed = bodyKSun *
+                    float SunriseFactor = (float)(Mathf.Cos(WeatherFunctions.getLatitude(cell) * Mathf.Deg2Rad) +
+                        Mathf.Cos(getSunlightAngle(pSim, AltLayer, cell) * Mathf.Deg2Rad)) / 2f;
+                    //Debug.Log("Sunrise Factor: " + SunriseFactor); //checks out
+                    //Do check to see if top layer is in sunlight
+                    if (WeatherFunctions.isSunlight(pSim, AltLayer, cell))
+                    {
+                        float bodyKSun = pSim.bodyKSun * SunriseFactor;
+                        //Debug.Log("bodyKSun: " + bodyKSun);
+                        temp.SWReflected = bodyKSun * temp.Albedo;
+                        temp.SWTransmitted = bodyKSun * temp.Transmissivity;
+                        //Debug.Log(temp.SWTransmitted); //top layer gives real values
+                        temp.SWAbsorbed = bodyKSun *
+                            (1 - temp.Albedo - temp.Transmissivity);
+
+                    }
+                    //Else, it's danky dark and this is where the sun don't shine
+                    else
+                    {
+                        temp.SWAbsorbed = 0;
+                        temp.SWReflected = 0;
+                        temp.SWTransmitted = 0;
+
+                    }
+                }
+                else if (AltLayer == 0) //Is it bottom layer? No transmit
+                {
+                    temp.SWReflected = wCellColumn[AltLayer + 1].SWTransmitted * temp.Albedo;
+                    temp.SWTransmitted = 0f;
+                    temp.SWAbsorbed = wCellColumn[AltLayer + 1].SWTransmitted *
+                        (1 - temp.Albedo);
+
+                    //Debug.Log(pSim.BufferMap[AltLayer +1][cell].SWTransmitted); //Gives 0
+                }
+                else //it's middle layers
+                {
+                    temp.SWReflected = wCellColumn[AltLayer + 1].SWTransmitted * temp.Albedo;
+                    temp.SWTransmitted = wCellColumn[AltLayer + 1].SWTransmitted * temp.Transmissivity;
+                    temp.SWAbsorbed = wCellColumn[AltLayer + 1].SWTransmitted *
                         (1 - temp.Albedo - temp.Transmissivity);
-                    
+
+                    //Debug.Log("Layer: "+ AltLayer + ", " + pSim.BufferMap[pSim.LiveMap.Count-1][cell].SWTransmitted); //gives 0
                 }
-                //Else, it's danky dark and this is where the sun don't shine
-                else
-                {
-                    temp.SWAbsorbed = 0;
-                    temp.SWReflected = 0;
-                    temp.SWTransmitted = 0;
-                    
-                }
+                wCellColumn[AltLayer] = temp;
             }
-            else if(AltLayer == 0) //Is it bottom layer? No transmit
-            {
-                temp.SWReflected = pSim.BufferMap[AltLayer + 1][cell].SWTransmitted * temp.Albedo;
-                temp.SWTransmitted = 0f;
-                temp.SWAbsorbed = pSim.BufferMap[AltLayer + 1][cell].SWTransmitted *
-                    (1 - temp.Albedo);
-                
-                //Debug.Log(pSim.BufferMap[AltLayer +1][cell].SWTransmitted); //Gives 0
-            }
-            else //it's middle layers
-            {
-                temp.SWReflected = pSim.BufferMap[AltLayer + 1][cell].SWTransmitted * temp.Albedo;
-                temp.SWTransmitted = pSim.BufferMap[AltLayer + 1][cell].SWTransmitted * temp.Transmissivity;
-                temp.SWAbsorbed = pSim.BufferMap[AltLayer + 1][cell].SWTransmitted *
-                    (1 - temp.Albedo - temp.Transmissivity);
-                
-                //Debug.Log("Layer: "+ AltLayer + ", " + pSim.BufferMap[pSim.LiveMap.Count-1][cell].SWTransmitted); //gives 0
-            }
-            //pSim.LiveMap[AltLayer][cell] = temp;
-            pSim.BufferMap[AltLayer][cell] = temp;
+            
         }
 
 
-        internal static void CalculateLongwaves(PlanetSimulator pSim, int AltLayer, Cell cell)
+        internal static void CalculateLongwaves(PlanetSimulator pSim, Cell cell, WeatherCell[] wCellColumn)
         {
             //calc emissions
             //calc transmissions
             //calc incoming
             //calc temp
-            CalculateEmissions(pSim, AltLayer, cell);
-            CalculateTransmissions(pSim, AltLayer, cell);
-            CalculateIncoming(pSim, AltLayer, cell);
+            for (int AltLayer = 0; AltLayer < wCellColumn.Length; AltLayer++ )
+            {
+                wCellColumn[AltLayer] = CalculateEmissions(pSim, AltLayer, cell, wCellColumn[AltLayer]);
+                CalculateTransmissions(pSim, AltLayer, cell, wCellColumn);
+            }
+            for (int i = 0; i < wCellColumn.Length; i++ )
+            {
+
+                CalculateIncoming(pSim, i, cell, wCellColumn);
+            }
+            
             
         }
 
-        internal static void CalculateEmissions(PlanetSimulator pSim, int AltLayer, Cell cell)
+        internal static WeatherCell CalculateEmissions(PlanetSimulator pSim, int AltLayer, Cell cell, WeatherCell wCell)
         {
-            WeatherCell temp = pSim.BufferMap[AltLayer][cell];
-            temp.LWOut = temp.Emissivity * SBC * ToTheFourth(temp.Temperature);
-            pSim.BufferMap[AltLayer][cell] = temp;
+            wCell.LWOut = wCell.Emissivity * SBC * ToTheFourth(wCell.Temperature);
+            //temp = wCell;
+            return wCell;
         }
-        internal static void CalculateTransmissions(PlanetSimulator pSim, int AltLayer, Cell cell)
+        internal static void CalculateTransmissions(PlanetSimulator pSim, int AltLayer, Cell cell, WeatherCell[] wCellColumn)
         {
-            WeatherCell temp = pSim.BufferMap[AltLayer][cell];
 
+            WeatherCell wCell = wCellColumn[AltLayer];
             if(AltLayer == 0) //ground layer, no transmit
             {
-                temp.LWTransmit = 0;
+                wCell.LWTransmit = 0;
             }
             else if(AltLayer == 1) //layer above ground
             {
-                temp.LWTransmit = pSim.BufferMap[AltLayer - 1][cell].LWOut * (1 - temp.Emissivity);
+                wCell.LWTransmit = wCellColumn[AltLayer - 1].LWOut * (1 - wCell.Emissivity);
             }
             else if(AltLayer<= pSim.LiveMap.Count -2) //middle layers
             {
-                temp.LWOut = (1 - temp.Emissivity) *
-                    (pSim.BufferMap[AltLayer - 1][cell].LWOut + pSim.BufferMap[AltLayer - 1][cell].LWTransmit);
+                wCell.LWOut = (1 - wCell.Emissivity) *
+                    (wCellColumn[AltLayer - 1].LWOut + wCellColumn[AltLayer - 1].LWTransmit);
             }
             else //Top layer 
             {
-                temp.LWOut = (1 - temp.Emissivity) *
-                    (pSim.BufferMap[AltLayer - 1][cell].LWOut + pSim.BufferMap[AltLayer - 1][cell].LWTransmit);
+                wCell.LWOut = (1 - wCell.Emissivity) *
+                    (wCellColumn[AltLayer - 1].LWOut + wCellColumn[AltLayer - 1].LWTransmit);
             }
-            pSim.BufferMap[AltLayer][cell] = temp;
+            wCellColumn[AltLayer] = wCell;
         }
-        internal static void CalculateIncoming(PlanetSimulator pSim, int AltLayer, Cell cell)
+        internal static void CalculateIncoming(PlanetSimulator pSim, int AltLayer, Cell cell, WeatherCell[] wCellColumn)
         {
-            WeatherCell temp = pSim.BufferMap[AltLayer][cell];
+            WeatherCell temp = wCellColumn[AltLayer];
 
             if (AltLayer == 0) //ground layer
             {
                 temp.LWIn = temp.Emissivity * 
-                    (pSim.BufferMap[AltLayer + 1][cell].LWOut + pSim.BufferMap[AltLayer + 1][cell].LWIn);
+                    (wCellColumn[AltLayer + 1].LWOut + wCellColumn[AltLayer + 1].LWIn);
             }
             else if (AltLayer == pSim.LiveMap.Count - 2) //middle layers
             {
                 temp.LWIn = temp.Emissivity * 
-                    ((pSim.BufferMap[AltLayer - 1][cell].LWOut + pSim.BufferMap[AltLayer - 1][cell].LWTransmit) +
-                    (pSim.BufferMap[AltLayer + 1][cell].LWOut + pSim.BufferMap[AltLayer + 1][cell].LWTransmit));
+                    ((wCellColumn[AltLayer - 1].LWOut + wCellColumn[AltLayer - 1].LWTransmit) +
+                    (wCellColumn[AltLayer + 1].LWOut + wCellColumn[AltLayer + 1].LWTransmit));
             }
             else //top layer
             {
                 temp.LWIn = temp.Emissivity * 
-                    (pSim.BufferMap[AltLayer - 1][cell].LWOut + pSim.BufferMap[AltLayer - 1][cell].LWTransmit);
+                    (wCellColumn[AltLayer - 1].LWOut + wCellColumn[AltLayer - 1].LWTransmit);
             }
-            pSim.BufferMap[AltLayer][cell] = temp;
-
+            wCellColumn[AltLayer] = temp;
         }
 
         internal static float CalculateTemperature(PlanetSimulator pSim, int AltLayer, Cell cell)
@@ -222,8 +233,8 @@ namespace KerbalWeatherSimulator
             //Lout = e,layer * SBC * T,layer^4
             //t^4 = Lout/ e,layer * SBC
             //t = 4throot(Lout/e,layer * SBC)
-            CalculateShortwaves(pSim, AltLayer, cell);
-            CalculateLongwaves(pSim, AltLayer, cell);
+            //CalculateShortwaves(pSim, AltLayer, cell);
+            //CalculateLongwaves(pSim, AltLayer, cell);
             //Debug.Log("SWAbs: " + pSim.BufferMap[AltLayer][cell].SWAbsorbed);
             //return Mathf.Pow((float)(((pSim.BufferMap[AltLayer][cell].LWOut) /
                 //(pSim.LiveMap[AltLayer][cell].Emissivity * SBC))), 0.25f);
@@ -235,7 +246,7 @@ namespace KerbalWeatherSimulator
             else
             {
                 return (Mathf.Pow((float)(((pSim.BufferMap[AltLayer][cell].SWAbsorbed + pSim.BufferMap[AltLayer][cell].LWIn) / 2.0f) /
-                (pSim.LiveMap[AltLayer][cell].Emissivity * SBC)), 0.25f))+calculateFinalTempDelta(pSim, AltLayer, cell);
+                (pSim.LiveMap[AltLayer][cell].Emissivity * SBC)), 0.25f)); //+calculateFinalTempDelta(pSim, AltLayer, cell);
             }
             
         }
@@ -279,7 +290,7 @@ namespace KerbalWeatherSimulator
 
         public static float calculateAlbedo(PlanetSimulator pSim, int AltLayer, Cell cell)
         {
-            return 0.30f * Mathf.Pow(0.75f, AltLayer);
+            return 0.30f * Mathf.Pow(0.85f, AltLayer);
         }
         public static float calculateEmissivity(PlanetSimulator pSim, int AltLayer, Cell cell)
         {

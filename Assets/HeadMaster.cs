@@ -28,12 +28,12 @@ namespace KerbalWeatherSimulator
         private float cameraDistance = 3f;
         public static  float sunRotationSpeed = 0f;
         public static bool test = true;
-        private Vector3 angularVelocity = new Vector3(0,2f,0);
+        private Vector3 angularVelocity = new Vector3(0,0.25f,0);
 
         void Awake()
         {
             sunMove = new SunMove();
-            pSim = new PlanetSimulator(5, 5, SunFunction, sunAngle, angularVelocity);
+            pSim = new PlanetSimulator(5, 10, SunFunction, sunAngle, angularVelocity);
             simDisplay = new SimulatorDisplay(pSim, DisplayMapType.PRESSURE_MAP);
             aRenderer = new AxisRenderer();
             debug = new DebugGUI(pSim);

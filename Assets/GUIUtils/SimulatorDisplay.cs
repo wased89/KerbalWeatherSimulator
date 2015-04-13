@@ -124,7 +124,7 @@ namespace GUIUtils
             Vector2[] UV = new Vector2[displayMesh.vertexCount];
             foreach (KeyValuePair<Cell, WeatherCell> kvp in pSim.LiveMap[0])
             {
-                float normValue = (kvp.Value.Pressure - 10000f) / 10000f;
+                float normValue = (kvp.Value.Pressure - 100000f) / 100000f;
                 if (normValue > 1f) { normValue = 1f; }
                 UV[kvp.Key.Index] = new Vector2(0.5f, (normValue + 0.05f) * 0.9f);
             }
